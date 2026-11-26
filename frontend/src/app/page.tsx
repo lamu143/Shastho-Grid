@@ -23,7 +23,6 @@ type Copy = Record<Locale, string>;
 const c = (en: string, bn: string): Copy => ({ en, bn });
 
 const COPY = {
-  badge: c("Built for Bangladesh · Hack the Vibe 2026", "বাংলাদেশের জন্য তৈরি · হ্যাক দ্য ভাইব ২০২৬"),
   heroTitleA: c("Provably safe care,", "প্রমাণিতভাবে নিরাপদ চিকিৎসা,"),
   heroTitleB: c("from pharmacy counter to ICU.", "ফার্মেসি কাউন্টার থেকে আইসিইউ পর্যন্ত।"),
   heroSub: c(
@@ -138,13 +137,6 @@ export default function HomePage() {
         />
         <div className="relative grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
           <motion.div initial="hidden" animate="show" variants={fadeUp} className="space-y-6">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#0F766E]/25 bg-white/80 px-3 py-1 text-xs font-semibold text-[#0F766E]">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#14B8A6] opacity-60 motion-reduce:hidden" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#0F766E]" />
-              </span>
-              {L(COPY.badge)}
-            </span>
             <h1 className="text-3xl leading-tight font-extrabold tracking-tight text-[#172A33] sm:text-5xl">
               {L(COPY.heroTitleA)}
               <span className="block bg-gradient-to-r from-[#0F766E] to-[#0891B2] bg-clip-text text-transparent">
