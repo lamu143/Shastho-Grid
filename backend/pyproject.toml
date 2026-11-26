@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "awaregrid-backend"
+version = "0.1.0"
+description = "AWaReGrid WHO AWaRe Antibiotic Stewardship Backend"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "ortools>=9.14,<10.0",
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic[email]>=2.0",
+    "pydantic-settings",
+    "sqlalchemy[asyncio]>=2.0.36,<2.1",
+    "asyncpg",
+    "alembic",
+    "passlib[argon2]>=1.7.4",
+    "argon2-cffi>=23.1.0",
+    "python-jose[cryptography]",
+    "redis",
+    "upstash-redis",
+    "groq",
+    "google-genai",
+    "python-multipart",
+    "httpx",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
