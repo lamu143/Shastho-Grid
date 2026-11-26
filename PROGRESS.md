@@ -46,14 +46,14 @@
 
 ```bash
 # Backend unit & integration tests (inside backend/)
-cd "/Users/razib/Downloads/AWaReGrid /backend"
+cd backend
 uv run pytest -v
 
 # Frontend typecheck, lint, and production Serwist PWA build (inside frontend/)
-cd "/Users/razib/Downloads/AWaReGrid /frontend"
+cd frontend
 npx tsc --noEmit && npm run lint && npm run build
 
 # Full-stack Playwright + Axe E2E suite (requires running PostgreSQL 16, Redis, FastAPI, and production Next.js)
-cd "/Users/razib/Downloads/AWaReGrid /frontend"
+cd frontend
 npx playwright test
 ```
