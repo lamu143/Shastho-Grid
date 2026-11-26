@@ -64,7 +64,7 @@ AWaReGrid is an offline-first clinical antibiotic stewardship Progressive Web Ap
 | **Admin** | Ashulia Union Sub-Center (`ASHULIA-01`) | `admin@awaregrid.org` | `Admin#2026!` | `2026` |
 | **Dispenser (Isolation)** | Dhamrai Community Dispensary (`DHAMRAI-01`) | `dhamrai.dispenser@awaregrid.org` | `Dispenser#2026!` | `2026` |
 
-> Demo credentials are for local hackathon evaluation only; change passwords and `JWT_SECRET_KEY` before any public production deployment.
+> **Synthetic development data only.** Demo accounts, patient records, historical prescriptions, inventory quantities, and hospital/blood availability are illustrative and must never be treated as real. The seed command is disabled when `ENVIRONMENT=production` or `prod`.
 
 ---
 
@@ -143,9 +143,11 @@ npm run start
 
 ## Cloud Deployment (Neon + Upstash + Render + Vercel)
 
-1. **PostgreSQL (Neon)**: Create a Neon PostgreSQL 16 database and copy its connection string into `DATABASE_URL` (the backend normalizes `postgresql://` to `postgresql+asyncpg://` automatically with `pool_pre_ping=True` and `pool_recycle=240`). Run `python -m app.db.seed` once against the target DB.
+1. **PostgreSQL (Neon)**: Create a Neon PostgreSQL 16 database and copy its connection string into `DATABASE_URL` (the backend normalizes `postgresql://` to `postgresql+asyncpg://` automatically with `pool_pre_ping=True` and `pool_recycle=240`). Apply the schema, then onboard verified facility data through an authorized process. Do not run the synthetic seed against production; it refuses to run when `ENVIRONMENT=production` or `prod`.
 2. **Redis (Upstash)**: Create an Upstash Redis database and set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (used automatically over local `REDIS_URL` when present).
 3. **Backend (Render)**: Deploy using root [`render.yaml`](./render.yaml) (`rootDir: backend`, `Dockerfile`, `--workers 1`, `healthCheckPath: /healthz`). Configure `DATABASE_URL`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `CORS_ORIGINS`, and optional `GROQ_API_KEY` / `GEMINI_API_KEY` in the Render dashboard (`sync: false`).
 4. **Frontend (Vercel)**: Import `frontend/` in Vercel (configured via `frontend/vercel.json` with `/sw.js` `Cache-Control: public, max-age=0, must-revalidate` and security headers). Set `NEXT_PUBLIC_API_URL` to your deployed Render API URL.
+
+Public reference data and provenance notes are in [`backend/data/reference/`](./backend/data/reference/). Dynamic patient, pharmacy, bed, ventilator, and blood inventory data must come from authorized operational systems; seeded demo values are not live observations.
 
 > Note: Keep all API keys and secrets in environment variables (`.env` locally, platform secret stores in cloud). Never commit real credentials to version control.

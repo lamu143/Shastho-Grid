@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import asyncio
+import csv
 import uuid
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.security import hash_secret
 from app.db.models import (
     AntibioticCatalog,
@@ -539,6 +542,38 @@ ANTIBIOTICS_DATA: list[dict[str, Any]] = [
     },
 ]
 
+# Keep stewardship tiers tied to WHO's versioned classification, rather than
+# trusting copied category labels embedded in individual seed rows.
+_WHO_AWARE_COST = {"ACCESS": 1, "WATCH": 15, "RESERVE": 120}
+_WHO_AWARE_ALIASES = {
+    "co-trimoxazole": "sulfamethoxazole/trimethoprim",
+    "cephalexin": "cefalexin",
+    "vancomycin": "vancomycin_iv",
+    "metronidazole": "metronidazole_oral",
+    "colistin": "colistin_iv",
+}
+
+
+def apply_who_aware_2025(data: list[dict[str, Any]]) -> None:
+    source = Path(__file__).resolve().parents[2] / "data" / "reference" / "who_aware_2025.csv"
+    with source.open(encoding="utf-8", newline="") as csv_file:
+        categories = {
+            row["antibiotic"].strip().casefold(): row["aware_category"].strip().upper()
+            for row in csv.DictReader(csv_file)
+        }
+
+    for item in data:
+        name = item["generic_name"].casefold().split(" (", maxsplit=1)[0].strip()
+        source_name = _WHO_AWARE_ALIASES.get(name, name)
+        category = categories.get(source_name)
+        if category not in _WHO_AWARE_COST:
+            raise ValueError(f"No WHO AWaRe 2025 category found for {item['drug_code']}: {name}")
+        item["aware_category"] = category
+        item["aware_tier_cost"] = _WHO_AWARE_COST[category]
+
+
+apply_who_aware_2025(ANTIBIOTICS_DATA)
+
 PATIENTS_DATA: list[dict[str, Any]] = [
     {
         "clinic_code": "ASHULIA-01",
@@ -896,6 +931,13 @@ DHAMRAI_HISTORICAL_DISPENSES: list[tuple[str, str, str, str, str, int, int, int]
 
 async def seed_database(session: AsyncSession) -> dict[str, int]:
     """Idempotently populate reference data, clinics, users, patients, batches, and baseline dispenses."""
+    if settings.ENVIRONMENT.strip().lower() in {"prod", "production"}:
+        raise RuntimeError(
+            "The bundled seed records include synthetic patients, accounts, inventory, "
+            "dispenses, and hospital capacity. Seeding is disabled in production; "
+            "load verified, authorized data through the production onboarding process."
+        )
+
     now = datetime.now(timezone.utc)
     today = now.date()
 
