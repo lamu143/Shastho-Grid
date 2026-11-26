@@ -13,6 +13,7 @@ import {
   Stethoscope,
 } from "lucide-react";
 import { AuthGuard } from "@/components/AuthGuard";
+import { MoleculeCard } from "@/components/MoleculeCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   getDb,
@@ -592,16 +593,16 @@ function TriageContent({ user }: { user: SessionUser }) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-[#172A33] sm:text-3xl">
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
           {t("triage.title")}
         </h1>
-        <p className="text-sm text-[#536975]">{t("triage.subtitle")}</p>
+        <p className="text-sm text-ink-2">{t("triage.subtitle")}</p>
       </div>
 
       {isReadOnlyAuditor && (
         <div
           role="status"
-          className="rounded-lg border border-[#0284C7]/40 bg-[#E0F2FE] px-4 py-2.5 text-xs font-semibold text-[#075985]"
+          className="rounded-lg border border-info/40 bg-info-soft px-4 py-2.5 text-xs font-semibold text-info-ink"
         >
           {t("common.readOnlyAuditor")}
         </div>
@@ -610,7 +611,7 @@ function TriageContent({ user }: { user: SessionUser }) {
       {errorMsg && (
         <div
           role="alert"
-          className="rounded-lg border border-[#DC2626]/40 bg-[#FEE2E2] px-4 py-3 text-sm font-medium text-[#991B1B]"
+          className="rounded-lg border border-danger/40 bg-danger-soft px-4 py-3 text-sm font-medium text-danger-ink"
         >
           {errorMsg}
         </div>
@@ -622,7 +623,7 @@ function TriageContent({ user }: { user: SessionUser }) {
           className="min-w-0 mac-card p-5 lg:col-span-6"
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-bold text-[#172A33]">
+            <h2 className="text-base font-bold text-ink">
               {t("triage.patientSectionTitle")}
             </h2>
             <button
@@ -632,9 +633,9 @@ function TriageContent({ user }: { user: SessionUser }) {
                 setPatientNotice(null);
                 setErrorMsg(null);
               }}
-              className="inline-flex items-center gap-1 rounded-lg border border-[#DCE6E9] bg-[#F3F7F8] px-3 py-1.5 text-xs font-semibold text-[#172A33] hover:bg-[#EDF3F5]"
+              className="inline-flex items-center gap-1 rounded-lg border border-line bg-canvas px-3 py-1.5 text-xs font-semibold text-ink hover:bg-fill"
             >
-              <Plus aria-hidden="true" className="h-3.5 w-3.5 text-[#0F766E]" />
+              <Plus aria-hidden="true" className="h-3.5 w-3.5 text-brand-ink" />
               <span>{t("triage.newPatientBtn")}</span>
             </button>
           </div>
@@ -642,7 +643,7 @@ function TriageContent({ user }: { user: SessionUser }) {
           <div className="mt-4 space-y-1.5">
             <label
               htmlFor="triage-patient-select"
-              className="block text-xs font-semibold text-[#405663]"
+              className="block text-xs font-semibold text-ink-2"
             >
               {t("triage.selectPatientLabel")}
             </label>
@@ -650,7 +651,7 @@ function TriageContent({ user }: { user: SessionUser }) {
               id="triage-patient-select"
               value={selectedPatientId}
               onChange={(e) => handlePatientSelectChange(e.target.value)}
-              className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33]"
+              className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
             >
               <option value="">{t("triage.createModeOption")}</option>
               {patients.map((p) => (
@@ -667,7 +668,7 @@ function TriageContent({ user }: { user: SessionUser }) {
               <div className="min-w-0 space-y-1">
                 <label
                   htmlFor="patient-full-name"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("triage.fullNameLabel")}
                 </label>
@@ -677,14 +678,14 @@ function TriageContent({ user }: { user: SessionUser }) {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder={t("triage.fullNamePlaceholder")}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33] placeholder:text-[#5C727E]"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-3"
                 />
               </div>
 
               <div className="min-w-0 space-y-1">
                 <label
                   htmlFor="patient-mrn"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("triage.mrnLabel")}
                 </label>
@@ -694,14 +695,14 @@ function TriageContent({ user }: { user: SessionUser }) {
                   value={mrn}
                   onChange={(e) => setMrn(e.target.value)}
                   placeholder={t("triage.mrnPlaceholder")}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33] placeholder:text-[#5C727E]"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-3"
                 />
               </div>
 
               <div className="min-w-0 space-y-1">
                 <label
                   htmlFor="patient-age"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("triage.ageLabel")}
                 </label>
@@ -712,14 +713,14 @@ function TriageContent({ user }: { user: SessionUser }) {
                   max={130}
                   value={ageYears}
                   onChange={(e) => setAgeYears(e.target.value)}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33]"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
                 />
               </div>
 
               <div className="min-w-0 space-y-1">
                 <label
                   htmlFor="patient-weight"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("triage.weightLabel")}
                 </label>
@@ -731,14 +732,14 @@ function TriageContent({ user }: { user: SessionUser }) {
                   step="0.5"
                   value={weightKg}
                   onChange={(e) => setWeightKg(e.target.value)}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33]"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
                 />
               </div>
 
               <div className="min-w-0 space-y-1">
                 <label
                   htmlFor="patient-sex"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("triage.sexLabel")}
                 </label>
@@ -746,7 +747,7 @@ function TriageContent({ user }: { user: SessionUser }) {
                   id="patient-sex"
                   value={sex}
                   onChange={(e) => handleSexChange(e.target.value as Sex)}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33]"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
                 >
                   <option value="F">{t("triage.sexFemale")}</option>
                   <option value="M">{t("triage.sexMale")}</option>
@@ -757,7 +758,7 @@ function TriageContent({ user }: { user: SessionUser }) {
               <div className="min-w-0 space-y-1">
                 <label
                   htmlFor="patient-egfr"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("triage.egfrLabel")}
                 </label>
@@ -768,27 +769,27 @@ function TriageContent({ user }: { user: SessionUser }) {
                   max={300}
                   value={egfr}
                   onChange={(e) => setEgfr(e.target.value)}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33]"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
                 />
               </div>
             </div>
 
-            <div className="space-y-2 rounded-lg border border-[#DCE6E9] bg-[#F3F7F8] p-3">
-              <label className="flex items-center gap-2 text-xs font-semibold text-[#172A33]">
+            <div className="space-y-2 rounded-lg border border-line bg-canvas p-3">
+              <label className="flex items-center gap-2 text-xs font-semibold text-ink">
                 <input
                   id="patient-pregnant"
                   type="checkbox"
                   disabled={sex !== "F"}
                   checked={sex === "F" && isPregnant}
                   onChange={(e) => setIsPregnant(e.target.checked)}
-                  className="h-4 w-4 accent-[#0F766E]"
+                  className="h-4 w-4 accent-brand-ink"
                 />
                 <span>{t("triage.pregnantLabel")}</span>
               </label>
 
               <label
                 htmlFor="allergy-sulfonamide"
-                className="flex items-center gap-2 text-xs font-semibold text-[#172A33]"
+                className="flex items-center gap-2 text-xs font-semibold text-ink"
               >
                 <input
                   id="allergy-sulfonamide"
@@ -797,14 +798,14 @@ function TriageContent({ user }: { user: SessionUser }) {
                   onChange={(e) =>
                     handleAllergyCheckbox("SULFONAMIDE", e.target.checked)
                   }
-                  className="h-4 w-4 accent-[#0F766E]"
+                  className="h-4 w-4 accent-brand-ink"
                 />
                 <span>{t("triage.sulfonamideCheckbox")}</span>
               </label>
 
               <label
                 htmlFor="allergy-penicillin"
-                className="flex items-center gap-2 text-xs font-semibold text-[#172A33]"
+                className="flex items-center gap-2 text-xs font-semibold text-ink"
               >
                 <input
                   id="allergy-penicillin"
@@ -813,7 +814,7 @@ function TriageContent({ user }: { user: SessionUser }) {
                   onChange={(e) =>
                     handleAllergyCheckbox("PENICILLIN", e.target.checked)
                   }
-                  className="h-4 w-4 accent-[#0F766E]"
+                  className="h-4 w-4 accent-brand-ink"
                 />
                 <span>{t("triage.penicillinCheckbox")}</span>
               </label>
@@ -821,7 +822,7 @@ function TriageContent({ user }: { user: SessionUser }) {
               <div className="pt-1">
                 <label
                   htmlFor="triage-allergies"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("triage.allergiesLabel")}
                 </label>
@@ -831,7 +832,7 @@ function TriageContent({ user }: { user: SessionUser }) {
                   value={allergiesText}
                   onChange={(e) => setAllergiesText(e.target.value)}
                   placeholder={t("triage.allergiesPlaceholder")}
-                  className="mt-1 w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-xs text-[#172A33] placeholder:text-[#5C727E]"
+                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs text-ink placeholder:text-ink-3"
                 />
               </div>
             </div>
@@ -839,7 +840,7 @@ function TriageContent({ user }: { user: SessionUser }) {
             {patientNotice && (
               <div
                 role="status"
-                className="rounded-lg border border-[#059669]/40 bg-[#ECFDF5] px-3 py-2 text-xs font-semibold text-[#065F46]"
+                className="rounded-lg border border-success/40 bg-success-soft px-3 py-2 text-xs font-semibold text-success-ink"
               >
                 {patientNotice}
               </div>
@@ -849,7 +850,7 @@ function TriageContent({ user }: { user: SessionUser }) {
               <button
                 type="submit"
                 disabled={savingPatient}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#115E59] disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
               >
                 <Save aria-hidden="true" className="h-3.5 w-3.5" />
                 <span>
@@ -868,11 +869,11 @@ function TriageContent({ user }: { user: SessionUser }) {
             className="mac-card p-5"
           >
             <div className="flex items-center justify-between gap-2">
-              <h2 className="text-base font-bold text-[#172A33]">
+              <h2 className="text-base font-bold text-ink">
                 {t("triage.voiceSectionTitle")}
               </h2>
               {voiceModelUsed && (
-                <span className="rounded-full border border-[#0F766E]/30 bg-[#F0FDFA] px-2.5 py-0.5 text-[11px] font-semibold text-[#0F766E]">
+                <span className="rounded-full border border-brand/30 bg-brand-soft px-2.5 py-0.5 text-[11px] font-semibold text-brand-ink">
                   {voiceModelUsed}
                 </span>
               )}
@@ -881,7 +882,7 @@ function TriageContent({ user }: { user: SessionUser }) {
             {voiceGuardAlert && (
               <div
                 role="alert"
-                className="mt-3 flex items-start gap-2 rounded-lg border border-[#DC2626]/40 bg-[#FEE2E2] px-3 py-2.5 text-xs font-semibold text-[#991B1B]"
+                className="mt-3 flex items-start gap-2 rounded-lg border border-danger/40 bg-danger-soft px-3 py-2.5 text-xs font-semibold text-danger-ink"
               >
                 <ShieldAlert aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>{voiceGuardAlert}</span>
@@ -892,7 +893,7 @@ function TriageContent({ user }: { user: SessionUser }) {
               <div>
                 <label
                   htmlFor="voice-transcript"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("triage.voiceTranscriptLabel")}
                 </label>
@@ -902,7 +903,7 @@ function TriageContent({ user }: { user: SessionUser }) {
                   value={voiceTranscript}
                   onChange={(e) => setVoiceTranscript(e.target.value)}
                   placeholder={t("triage.voiceTranscriptPlaceholder")}
-                  className="mt-1 w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-xs text-[#172A33] placeholder:text-[#5C727E]"
+                  className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs text-ink placeholder:text-ink-3"
                 />
               </div>
 
@@ -910,7 +911,7 @@ function TriageContent({ user }: { user: SessionUser }) {
                 <div className="min-w-0 flex-1">
                   <label
                     htmlFor="voice-audio"
-                    className="block text-xs font-semibold text-[#405663]"
+                    className="block text-xs font-semibold text-ink-2"
                   >
                     {t("triage.voiceAudioLabel")}
                   </label>
@@ -919,14 +920,14 @@ function TriageContent({ user }: { user: SessionUser }) {
                     type="file"
                     accept="audio/*"
                     onChange={(e) => setVoiceFile(e.target.files?.[0] ?? null)}
-                    className="mt-1 block w-full text-xs text-[#405663] file:mr-3 file:rounded-md file:border file:border-[#D1DEE3] file:bg-[#F3F7F8] file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-[#172A33]"
+                    className="mt-1 block w-full text-xs text-ink-2 file:mr-3 file:rounded-md file:border file:border-line file:bg-canvas file:px-2.5 file:py-1 file:text-xs file:font-semibold file:text-ink"
                   />
                 </div>
                 <button
                   type="button"
                   disabled={voiceLoading}
                   onClick={handleVoiceIntake}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#0F766E] bg-[#F0FDFA] px-3.5 py-2 text-xs font-semibold text-[#0F766E] hover:bg-[#CCFBF1] disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-brand bg-brand-soft px-3.5 py-2 text-xs font-semibold text-brand-ink hover:bg-brand-soft disabled:opacity-60"
                 >
                   <Mic aria-hidden="true" className="h-3.5 w-3.5" />
                   <span>
@@ -943,7 +944,7 @@ function TriageContent({ user }: { user: SessionUser }) {
             aria-label={t("triage.solverSectionTitle")}
             className="mac-card p-5"
           >
-            <h2 className="text-base font-bold text-[#172A33]">
+            <h2 className="text-base font-bold text-ink">
               {t("triage.solverSectionTitle")}
             </h2>
 
@@ -951,7 +952,7 @@ function TriageContent({ user }: { user: SessionUser }) {
               <div className="min-w-0 space-y-1 sm:col-span-2">
                 <label
                   htmlFor="triage-syndrome"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("triage.syndromeLabel")}
                 </label>
@@ -959,7 +960,7 @@ function TriageContent({ user }: { user: SessionUser }) {
                   id="triage-syndrome"
                   value={syndromeCode}
                   onChange={(e) => setSyndromeCode(e.target.value)}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33]"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
                 >
                   {guidelines.map((g) => (
                     <option key={g.syndrome_code} value={g.syndrome_code}>
@@ -974,7 +975,7 @@ function TriageContent({ user }: { user: SessionUser }) {
               <div className="min-w-0 space-y-1">
                 <label
                   htmlFor="triage-severity"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("triage.severityLabel")}
                 </label>
@@ -982,7 +983,7 @@ function TriageContent({ user }: { user: SessionUser }) {
                   id="triage-severity"
                   value={severity}
                   onChange={(e) => setSeverity(e.target.value as Severity)}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33]"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
                 >
                   <option value="MILD">{t("triage.severityMild")}</option>
                   <option value="MODERATE">{t("triage.severityModerate")}</option>
@@ -993,7 +994,7 @@ function TriageContent({ user }: { user: SessionUser }) {
               <div className="min-w-0 space-y-1">
                 <label
                   htmlFor="triage-max-tier"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("triage.maxTierLabel")}
                 </label>
@@ -1003,7 +1004,7 @@ function TriageContent({ user }: { user: SessionUser }) {
                   onChange={(e) =>
                     setMaxAwareTier(e.target.value as AwareCategory | "")
                   }
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33]"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
                 >
                   <option value="">{t("triage.maxTierAny")}</option>
                   <option value="ACCESS">{t("aware.ACCESS")}</option>
@@ -1018,7 +1019,7 @@ function TriageContent({ user }: { user: SessionUser }) {
                 type="button"
                 disabled={optimizing}
                 onClick={() => runOptimize()}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#115E59] disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
               >
                 <Stethoscope aria-hidden="true" className="h-4 w-4" />
                 <span>
@@ -1037,12 +1038,12 @@ function TriageContent({ user }: { user: SessionUser }) {
           aria-label={t("triage.verdictSectionTitle")}
           className="mac-card p-6"
         >
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#DCE6E9] pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-lg font-bold text-[#172A33]">
+              <h2 className="text-lg font-bold text-ink">
                 {t("triage.verdictSectionTitle")}
               </h2>
-              <span className="rounded-full border border-[#D1DEE3] bg-[#F3F7F8] px-3 py-0.5 text-xs font-bold text-[#172A33]">
+              <span className="rounded-full border border-line bg-canvas px-3 py-0.5 text-xs font-bold text-ink">
                 {t("triage.solverStatus")}: {verdict.solver_status}
               </span>
               <StatusBadge variant={verdict.aware_category} />
@@ -1050,18 +1051,18 @@ function TriageContent({ user }: { user: SessionUser }) {
 
             <div className="flex flex-wrap items-center gap-2">
               {verdict.offline_mode && (
-                <span className="rounded-full border border-[#D97706]/45 bg-[#FEF3C7] px-2.5 py-0.5 text-xs font-semibold text-[#92400E]">
+                <span className="rounded-full border border-warn/45 bg-warn-soft px-2.5 py-0.5 text-xs font-semibold text-warn-ink">
                   {t("triage.offlineRulesBadge")}
                 </span>
               )}
               {verdict.counseling.deidentified && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-[#059669]/40 bg-[#ECFDF5] px-2.5 py-0.5 text-xs font-semibold text-[#065F46]">
+                <span className="inline-flex items-center gap-1 rounded-full border border-success/40 bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success-ink">
                   <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5" />
                   <span>{t("triage.deidentifiedBadge")}</span>
                 </span>
               )}
               {verdict.counseling.hallucination_guard_passed && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-[#0284C7]/40 bg-[#E0F2FE] px-2.5 py-0.5 text-xs font-semibold text-[#075985]">
+                <span className="inline-flex items-center gap-1 rounded-full border border-info/40 bg-info-soft px-2.5 py-0.5 text-xs font-semibold text-info-ink">
                   <Sparkles aria-hidden="true" className="h-3.5 w-3.5" />
                   <span>
                     {t("triage.hallucinationGuardBadge")} (
@@ -1075,30 +1076,30 @@ function TriageContent({ user }: { user: SessionUser }) {
           <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
             <div className="min-w-0 space-y-4">
               {verdict.solver_status === "NO_ANTIBIOTIC" && (
-                <div className="rounded-lg border border-[#0284C7]/40 bg-[#E0F2FE] p-4 text-sm font-semibold text-[#075985]">
+                <div className="rounded-lg border border-info/40 bg-info-soft p-4 text-sm font-semibold text-info-ink">
                   {t("triage.viralNoAbx")}
                 </div>
               )}
 
               {recAbx && (
-                <div className="rounded-lg border border-[#DCE6E9] bg-[#F3F7F8] p-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wide text-[#536975]">
+                <div className="rounded-lg border border-line bg-canvas p-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-ink-2">
                     {t("triage.recommendedDrug")}
                   </h3>
-                  <p className="mt-1 text-base font-bold text-[#172A33]">
+                  <p className="mt-1 text-base font-bold text-ink">
                     {String(recAbx.generic_name ?? recAbx.drug_code ?? "")}{" "}
-                    <span className="text-xs font-medium text-[#536975]">
+                    <span className="text-xs font-medium text-ink-2">
                       ({String(recAbx.drug_code ?? "")})
                     </span>
                   </p>
-                  <p className="mt-1 text-xs text-[#405663]">
+                  <p className="mt-1 text-xs text-ink-2">
                     {locale === "bn"
                       ? String(recAbx.dose_regimen_bn ?? recAbx.dose_regimen_en ?? "")
                       : String(recAbx.dose_regimen_en ?? "")}
                   </p>
 
                   {recBatch && (
-                    <div className="mt-3 border-t border-[#DCE6E9] pt-2 text-xs text-[#405663]">
+                    <div className="mt-3 border-t border-line pt-2 text-xs text-ink-2">
                       <span className="font-semibold">
                         {t("triage.recommendedBatch")}:
                       </span>{" "}
@@ -1108,18 +1109,26 @@ function TriageContent({ user }: { user: SessionUser }) {
                       {String(recBatch.unit ?? "units")}
                     </div>
                   )}
+
+                  {Boolean(recAbx.drug_code) && (
+                    <MoleculeCard
+                      drugCode={String(recAbx.drug_code)}
+                      genericName={String(recAbx.generic_name ?? "")}
+                      compact
+                    />
+                  )}
                 </div>
               )}
 
               {verdict.mus_conflicts.length > 0 && (
-                <div className="rounded-lg border border-[#DC2626]/40 bg-[#FEE2E2]/60 p-4">
-                  <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[#991B1B]">
+                <div className="rounded-lg border border-danger/40 bg-danger-soft/60 p-4">
+                  <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-danger-ink">
                     <AlertTriangle aria-hidden="true" className="h-4 w-4" />
                     <span>{t("triage.musTitle")}</span>
                   </h3>
-                  <ul className="mt-2 space-y-2 text-xs text-[#7F1D1D]">
+                  <ul className="mt-2 space-y-2 text-xs text-danger-ink">
                     {verdict.mus_conflicts.map((m, idx) => (
-                      <li key={`${m.code}-${idx}`} className="rounded bg-white/80 p-2">
+                      <li key={`${m.code}-${idx}`} className="rounded bg-surface/80 p-2">
                         <p className="font-bold">
                           [{m.code}] {m.label}
                         </p>
@@ -1131,15 +1140,15 @@ function TriageContent({ user }: { user: SessionUser }) {
               )}
 
               {verdict.safe_relaxations.length > 0 && (
-                <div className="rounded-lg border border-[#D97706]/45 bg-[#FEF3C7]/60 p-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wide text-[#92400E]">
+                <div className="rounded-lg border border-warn/45 bg-warn-soft/60 p-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-warn-ink">
                     {t("triage.relaxationsTitle")}
                   </h3>
-                  <ul className="mt-2 space-y-2 text-xs text-[#78350F]">
+                  <ul className="mt-2 space-y-2 text-xs text-warn-ink">
                     {verdict.safe_relaxations.map((rel, idx) => (
                       <li
                         key={`${rel.action}-${idx}`}
-                        className="rounded bg-white/85 p-2.5"
+                        className="rounded bg-surface/85 p-2.5"
                       >
                         <p className="font-bold">
                           {rel.action}
@@ -1151,7 +1160,7 @@ function TriageContent({ user }: { user: SessionUser }) {
                           <button
                             type="button"
                             onClick={() => runOptimize("WATCH")}
-                            className="mt-2 inline-flex items-center rounded-md bg-[#0F766E] px-3 py-1 text-xs font-semibold text-white hover:bg-[#115E59]"
+                            className="mt-2 inline-flex items-center rounded-md bg-brand px-3 py-1 text-xs font-semibold text-white hover:bg-brand-strong"
                           >
                             {t("triage.escalateWatchBtn")}
                           </button>
@@ -1164,20 +1173,20 @@ function TriageContent({ user }: { user: SessionUser }) {
             </div>
 
             <div className="min-w-0 space-y-4">
-              <div className="rounded-lg border border-[#DCE6E9] bg-[#F3F7F8] p-4">
-                <h3 className="text-xs font-bold uppercase tracking-wide text-[#536975]">
+              <div className="rounded-lg border border-line bg-canvas p-4">
+                <h3 className="text-xs font-bold uppercase tracking-wide text-ink-2">
                   {t("triage.counselingTitle")}
                 </h3>
-                <p className="mt-1.5 text-sm font-medium text-[#172A33]">
+                <p className="mt-1.5 text-sm font-medium text-ink">
                   {verdict.counseling.summary}
                 </p>
 
                 {verdict.counseling.instructions.length > 0 && (
                   <div className="mt-3">
-                    <h4 className="text-xs font-semibold text-[#405663]">
+                    <h4 className="text-xs font-semibold text-ink-2">
                       {t("triage.instructionsLabel")}
                     </h4>
-                    <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-[#405663]">
+                    <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-ink-2">
                       {verdict.counseling.instructions.map((item, idx) => (
                         <li key={idx}>{item}</li>
                       ))}
@@ -1187,10 +1196,10 @@ function TriageContent({ user }: { user: SessionUser }) {
 
                 {verdict.counseling.red_flags.length > 0 && (
                   <div className="mt-3">
-                    <h4 className="text-xs font-semibold text-[#991B1B]">
+                    <h4 className="text-xs font-semibold text-danger-ink">
                       {t("triage.redFlagsLabel")}
                     </h4>
-                    <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-[#991B1B]">
+                    <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-danger-ink">
                       {verdict.counseling.red_flags.map((item, idx) => (
                         <li key={idx}>{item}</li>
                       ))}
@@ -1200,12 +1209,12 @@ function TriageContent({ user }: { user: SessionUser }) {
               </div>
 
               {!isReadOnlyAuditor && verdict.solver_status !== "INFEASIBLE" && (
-                <div className="rounded-lg border border-[#DCE6E9] bg-[#FFFFFF] p-4">
+                <div className="rounded-lg border border-line bg-surface p-4">
                   <div className="flex flex-wrap items-end gap-3">
                     <div>
                       <label
                         htmlFor="triage-dispense-qty"
-                        className="block text-xs font-semibold text-[#405663]"
+                        className="block text-xs font-semibold text-ink-2"
                       >
                         {t("triage.dispenseQtyLabel")}
                       </label>
@@ -1216,14 +1225,14 @@ function TriageContent({ user }: { user: SessionUser }) {
                         max={200}
                         value={dispenseQty}
                         onChange={(e) => setDispenseQty(e.target.value)}
-                        className="mt-1 w-28 rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33]"
+                        className="mt-1 w-28 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink"
                       />
                     </div>
                     <button
                       type="button"
                       disabled={creatingDraft}
                       onClick={handleCreateDraftDispense}
-                      className="inline-flex items-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#115E59] disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
                     >
                       <CheckCircle2 aria-hidden="true" className="h-4 w-4" />
                       <span>
@@ -1237,7 +1246,7 @@ function TriageContent({ user }: { user: SessionUser }) {
                   {draftNotice && (
                     <div
                       role="status"
-                      className="mt-3 rounded-lg border border-[#059669]/40 bg-[#ECFDF5] px-3 py-2 text-xs font-semibold text-[#065F46]"
+                      className="mt-3 rounded-lg border border-success/40 bg-success-soft px-3 py-2 text-xs font-semibold text-success-ink"
                     >
                       {draftNotice}
                     </div>

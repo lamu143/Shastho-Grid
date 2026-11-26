@@ -194,6 +194,10 @@ export const GuidelineSchema = z.object({
   default_duration_days: z.number().int().default(5),
   guidance_en: z.string().default(""),
   guidance_bn: z.string().default(""),
+  source_document: z.string().optional(),
+  rule_version: z.string().optional(),
+  effective_date: z.string().optional(),
+  review_status: z.string().optional(),
 });
 
 const stringArrayField = z.preprocess((val) => {
@@ -1084,4 +1088,19 @@ export async function adminListCatalog() {
   return apiRequest("/api/v1/admin/catalog", {
     schema: z.array(CatalogDrugSchema),
   });
+}
+
+export async function fetchLakehouseNdjson(): Promise<string> {
+  const token = getAccessToken();
+  const res = await fetch(`${getApiBaseUrl()}/api/v1/analytics/lakehouse-export`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    throw new ApiError({
+      status: res.status,
+      error_code: "LAKEHOUSE_EXPORT_FAILED",
+      message: `Export failed (${res.status})`,
+    });
+  }
+  return res.text();
 }

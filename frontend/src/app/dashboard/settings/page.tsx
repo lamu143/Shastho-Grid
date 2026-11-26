@@ -136,16 +136,16 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-[#172A33] sm:text-3xl">
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
           {t("settings.title")}
         </h1>
-        <p className="text-sm text-[#536975]">{t("settings.subtitle")}</p>
+        <p className="text-sm text-ink-2">{t("settings.subtitle")}</p>
       </div>
 
       {errorMsg && (
         <div
           role="alert"
-          className="rounded-lg border border-[#DC2626]/40 bg-[#FEE2E2] px-4 py-3 text-sm font-medium text-[#991B1B]"
+          className="rounded-lg border border-danger/40 bg-danger-soft px-4 py-3 text-sm font-medium text-danger-ink"
         >
           {errorMsg}
         </div>
@@ -154,7 +154,7 @@ export default function SettingsPage() {
       {hydrateMsg && (
         <div
           role="status"
-          className="rounded-lg border border-[#059669]/40 bg-[#ECFDF5] px-4 py-3 text-sm font-medium text-[#065F46]"
+          className="rounded-lg border border-success/40 bg-success-soft px-4 py-3 text-sm font-medium text-success-ink"
         >
           {hydrateMsg}
         </div>
@@ -165,8 +165,8 @@ export default function SettingsPage() {
           aria-label={t("settings.languageSection")}
           className="min-w-0 mac-card p-5"
         >
-          <h2 className="flex items-center gap-2 text-base font-bold text-[#172A33]">
-            <Languages aria-hidden="true" className="h-4 w-4 text-[#0F766E]" />
+          <h2 className="flex items-center gap-2 text-base font-bold text-ink">
+            <Languages aria-hidden="true" className="h-4 w-4 text-brand-ink" />
             <span>{t("settings.languageSection")}</span>
           </h2>
           <div className="mt-4">
@@ -178,26 +178,26 @@ export default function SettingsPage() {
           aria-label={t("settings.connectivitySection")}
           className="min-w-0 mac-card p-5"
         >
-          <h2 className="flex items-center gap-2 text-base font-bold text-[#172A33]">
-            <Wifi aria-hidden="true" className="h-4 w-4 text-[#0F766E]" />
+          <h2 className="flex items-center gap-2 text-base font-bold text-ink">
+            <Wifi aria-hidden="true" className="h-4 w-4 text-brand-ink" />
             <span>{t("settings.connectivitySection")}</span>
           </h2>
           <div className="mt-4 space-y-2.5 text-xs">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold text-[#405663]">
+              <span className="font-semibold text-ink-2">
                 {t("common.status")}
               </span>
               <StatusBadge variant={isOnline ? "ONLINE" : "OFFLINE"} />
             </div>
             <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold text-[#405663]">
+              <span className="font-semibold text-ink-2">
                 {t("settings.swLabel")}
               </span>
               <span
                 className={`rounded-full border px-2.5 py-0.5 font-semibold ${
                   swActive
-                    ? "border-[#059669]/40 bg-[#ECFDF5] text-[#065F46]"
-                    : "border-[#D1DEE3] bg-[#F3F7F8] text-[#405663]"
+                    ? "border-success/40 bg-success-soft text-success-ink"
+                    : "border-line bg-canvas text-ink-2"
                 }`}
               >
                 {swActive ? t("settings.swActive") : t("settings.swInactive")}
@@ -212,8 +212,8 @@ export default function SettingsPage() {
         className="mac-card p-5"
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="flex items-center gap-2 text-base font-bold text-[#172A33]">
-            <Database aria-hidden="true" className="h-4 w-4 text-[#0F766E]" />
+          <h2 className="flex items-center gap-2 text-base font-bold text-ink">
+            <Database aria-hidden="true" className="h-4 w-4 text-brand-ink" />
             <span>{t("settings.cacheSection")}</span>
           </h2>
 
@@ -221,7 +221,7 @@ export default function SettingsPage() {
             type="button"
             disabled={hydrating}
             onClick={handleHydrateCache}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#115E59] disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
           >
             <RefreshCw
               aria-hidden="true"
@@ -237,12 +237,12 @@ export default function SettingsPage() {
           {countCards.map((item) => (
             <div
               key={item.label}
-              className="min-w-0 rounded-lg border border-[#DCE6E9] bg-[#F3F7F8] p-3"
+              className="min-w-0 rounded-lg border border-line bg-canvas p-3"
             >
-              <p className="truncate text-xs font-semibold text-[#536975]">
+              <p className="truncate text-xs font-semibold text-ink-2">
                 {item.label}
               </p>
-              <p className="mt-1 text-xl font-bold text-[#172A33]">
+              <p className="mt-1 text-xl font-bold text-ink">
                 {item.value}
               </p>
             </div>
@@ -254,14 +254,14 @@ export default function SettingsPage() {
         aria-label={t("settings.a11ySection")}
         className="mac-card p-5"
       >
-        <h2 className="flex items-center gap-2 text-base font-bold text-[#172A33]">
-          <Accessibility aria-hidden="true" className="h-4 w-4 text-[#0F766E]" />
+        <h2 className="flex items-center gap-2 text-base font-bold text-ink">
+          <Accessibility aria-hidden="true" className="h-4 w-4 text-brand-ink" />
           <span>{t("settings.a11ySection")}</span>
         </h2>
-        <p className="mt-2 text-xs leading-relaxed text-[#405663]">
+        <p className="mt-2 text-xs leading-relaxed text-ink-2">
           {t("settings.a11yBody")}
         </p>
-        <p className="mt-2 text-xs font-semibold text-[#0F766E]">
+        <p className="mt-2 text-xs font-semibold text-brand-ink">
           prefers-reduced-motion: {prefersReducedMotion ? "reduce" : "no-preference"}
         </p>
       </section>

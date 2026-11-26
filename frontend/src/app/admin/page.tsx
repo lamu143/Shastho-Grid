@@ -180,18 +180,18 @@ function AdminContent({ user }: { user: SessionUser }) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-16 sm:pb-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-[#172A33] sm:text-3xl">
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
           {t("admin.title")}
         </h1>
-        <p className="text-sm text-[#536975]">{t("admin.subtitle")}</p>
+        <p className="text-sm text-ink-2">{t("admin.subtitle")}</p>
       </div>
 
       {errorMsg && (
         <div
           role="alert"
-          className="rounded-lg border border-[#DC2626]/40 bg-[#FEE2E2] px-4 py-3 text-sm font-medium text-[#991B1B]"
+          className="rounded-lg border border-danger/40 bg-danger-soft px-4 py-3 text-sm font-medium text-danger-ink"
         >
           {errorMsg}
         </div>
@@ -200,7 +200,7 @@ function AdminContent({ user }: { user: SessionUser }) {
       {successMsg && (
         <div
           role="status"
-          className="rounded-lg border border-[#059669]/40 bg-[#ECFDF5] px-4 py-3 text-sm font-medium text-[#065F46]"
+          className="rounded-lg border border-success/40 bg-success-soft px-4 py-3 text-sm font-medium text-success-ink"
         >
           {successMsg}
         </div>
@@ -209,7 +209,7 @@ function AdminContent({ user }: { user: SessionUser }) {
       <div
         role="tablist"
         aria-label={t("admin.title")}
-        className="flex flex-wrap gap-2 border-b border-[#DCE6E9] pb-3"
+        className="flex flex-wrap gap-2 border-b border-line pb-3"
       >
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -225,8 +225,8 @@ function AdminContent({ user }: { user: SessionUser }) {
               onClick={() => setActiveTab(tab.id)}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
                 selected
-                  ? "bg-[#0F766E] text-white"
-                  : "border border-[#DCE6E9] bg-[#FFFFFF] text-[#405663] hover:bg-[#EDF3F5]"
+                  ? "bg-brand text-white"
+                  : "border border-line bg-surface text-ink-2 hover:bg-fill"
               }`}
             >
               <Icon aria-hidden="true" className="h-3.5 w-3.5" />
@@ -237,7 +237,7 @@ function AdminContent({ user }: { user: SessionUser }) {
       </div>
 
       {loading ? (
-        <p className="text-sm text-[#536975]">{t("common.loading")}</p>
+        <p className="text-sm text-ink-2">{t("common.loading")}</p>
       ) : (
         <>
           {activeTab === "clinics" && (
@@ -247,13 +247,13 @@ function AdminContent({ user }: { user: SessionUser }) {
               aria-labelledby="admin-tab-clinics"
               className="mac-card p-5"
             >
-              <h2 className="text-base font-bold text-[#172A33]">
+              <h2 className="text-base font-bold text-ink">
                 {t("admin.tabClinics")}
               </h2>
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[540px] border-collapse text-left text-xs">
                   <thead>
-                    <tr className="border-b border-[#DCE6E9] bg-[#F3F7F8] text-[#405663]">
+                    <tr className="border-b border-line bg-canvas text-ink-2">
                       <th scope="col" className="px-3 py-2.5 font-semibold">
                         {t("admin.colCode")}
                       </th>
@@ -270,17 +270,17 @@ function AdminContent({ user }: { user: SessionUser }) {
                   </thead>
                   <tbody className="divide-y divide-[#DCE6E9]">
                     {clinics.map((c) => (
-                      <tr key={c.id} className="hover:bg-[#F3F7F8]">
-                        <td className="px-3 py-2.5 font-mono font-semibold text-[#172A33]">
+                      <tr key={c.id} className="hover:bg-canvas">
+                        <td className="px-3 py-2.5 font-mono font-semibold text-ink">
                           {c.code}
                         </td>
-                        <td className="px-3 py-2.5 font-medium text-[#172A33]">
+                        <td className="px-3 py-2.5 font-medium text-ink">
                           {c.name}
                         </td>
-                        <td className="px-3 py-2.5 text-[#405663]">
+                        <td className="px-3 py-2.5 text-ink-2">
                           {c.upazila ?? "-"}, {c.district ?? "-"}
                         </td>
-                        <td className="px-3 py-2.5 font-semibold text-[#0F766E]">
+                        <td className="px-3 py-2.5 font-semibold text-brand-ink">
                           {c.target_access_pct ?? 60}%
                         </td>
                       </tr>
@@ -299,8 +299,8 @@ function AdminContent({ user }: { user: SessionUser }) {
               className="space-y-6"
             >
               <div className="mac-card p-5">
-                <h2 className="flex items-center gap-2 text-base font-bold text-[#172A33]">
-                  <UserPlus aria-hidden="true" className="h-4 w-4 text-[#0F766E]" />
+                <h2 className="flex items-center gap-2 text-base font-bold text-ink">
+                  <UserPlus aria-hidden="true" className="h-4 w-4 text-brand-ink" />
                   <span>{t("admin.createUserTitle")}</span>
                 </h2>
                 <form
@@ -310,7 +310,7 @@ function AdminContent({ user }: { user: SessionUser }) {
                   <div>
                     <label
                       htmlFor="admin-user-name"
-                      className="block text-xs font-semibold text-[#405663]"
+                      className="block text-xs font-semibold text-ink-2"
                     >
                       {t("admin.userFullName")}
                     </label>
@@ -320,14 +320,14 @@ function AdminContent({ user }: { user: SessionUser }) {
                       required
                       value={newFullName}
                       onChange={(e) => setNewFullName(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-[#D1DEE3] px-3 py-2 text-xs text-[#172A33]"
+                      className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-xs text-ink"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="admin-user-email"
-                      className="block text-xs font-semibold text-[#405663]"
+                      className="block text-xs font-semibold text-ink-2"
                     >
                       {t("admin.userEmail")}
                     </label>
@@ -337,14 +337,14 @@ function AdminContent({ user }: { user: SessionUser }) {
                       required
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-[#D1DEE3] px-3 py-2 text-xs text-[#172A33]"
+                      className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-xs text-ink"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="admin-user-password"
-                      className="block text-xs font-semibold text-[#405663]"
+                      className="block text-xs font-semibold text-ink-2"
                     >
                       {t("admin.userPassword")}
                     </label>
@@ -355,14 +355,14 @@ function AdminContent({ user }: { user: SessionUser }) {
                       required
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-[#D1DEE3] px-3 py-2 text-xs text-[#172A33]"
+                      className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-xs text-ink"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="admin-user-pin"
-                      className="block text-xs font-semibold text-[#405663]"
+                      className="block text-xs font-semibold text-ink-2"
                     >
                       {t("admin.userPin")}
                     </label>
@@ -371,14 +371,14 @@ function AdminContent({ user }: { user: SessionUser }) {
                       type="text"
                       value={newPin}
                       onChange={(e) => setNewPin(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-[#D1DEE3] px-3 py-2 text-xs text-[#172A33]"
+                      className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-xs text-ink"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="admin-user-role"
-                      className="block text-xs font-semibold text-[#405663]"
+                      className="block text-xs font-semibold text-ink-2"
                     >
                       {t("admin.userRole")}
                     </label>
@@ -386,7 +386,7 @@ function AdminContent({ user }: { user: SessionUser }) {
                       id="admin-user-role"
                       value={newRole}
                       onChange={(e) => setNewRole(e.target.value as UserRole)}
-                      className="mt-1 w-full rounded-lg border border-[#D1DEE3] px-3 py-2 text-xs text-[#172A33]"
+                      className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-xs text-ink"
                     >
                       <option value="dispenser">dispenser</option>
                       <option value="pharmacist">pharmacist</option>
@@ -398,7 +398,7 @@ function AdminContent({ user }: { user: SessionUser }) {
                   <div>
                     <label
                       htmlFor="admin-user-clinic"
-                      className="block text-xs font-semibold text-[#405663]"
+                      className="block text-xs font-semibold text-ink-2"
                     >
                       {t("admin.userClinic")}
                     </label>
@@ -406,7 +406,7 @@ function AdminContent({ user }: { user: SessionUser }) {
                       id="admin-user-clinic"
                       value={newClinicId}
                       onChange={(e) => setNewClinicId(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-[#D1DEE3] px-3 py-2 text-xs text-[#172A33]"
+                      className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-xs text-ink"
                     >
                       {clinics.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -420,7 +420,7 @@ function AdminContent({ user }: { user: SessionUser }) {
                     <button
                       type="submit"
                       disabled={submittingUser}
-                      className="inline-flex items-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#115E59] disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
                     >
                       <UserPlus aria-hidden="true" className="h-3.5 w-3.5" />
                       <span>{t("admin.createUserBtn")}</span>
@@ -430,13 +430,13 @@ function AdminContent({ user }: { user: SessionUser }) {
               </div>
 
               <div className="mac-card p-5">
-                <h2 className="text-base font-bold text-[#172A33]">
+                <h2 className="text-base font-bold text-ink">
                   {t("admin.tabUsers")}
                 </h2>
                 <div className="mt-4 overflow-x-auto">
                   <table className="w-full min-w-[600px] border-collapse text-left text-xs">
                     <thead>
-                      <tr className="border-b border-[#DCE6E9] bg-[#F3F7F8] text-[#405663]">
+                      <tr className="border-b border-line bg-canvas text-ink-2">
                         <th scope="col" className="px-3 py-2.5 font-semibold">
                           {t("admin.colName")}
                         </th>
@@ -453,23 +453,23 @@ function AdminContent({ user }: { user: SessionUser }) {
                     </thead>
                     <tbody className="divide-y divide-[#DCE6E9]">
                       {users.map((u) => (
-                        <tr key={u.id} className="hover:bg-[#F3F7F8]">
-                          <td className="px-3 py-2.5 font-medium text-[#172A33]">
+                        <tr key={u.id} className="hover:bg-canvas">
+                          <td className="px-3 py-2.5 font-medium text-ink">
                             {u.full_name}
                           </td>
-                          <td className="px-3 py-2.5 text-[#405663]">
+                          <td className="px-3 py-2.5 text-ink-2">
                             {u.email}
                           </td>
-                          <td className="px-3 py-2.5 font-semibold text-[#0F766E]">
+                          <td className="px-3 py-2.5 font-semibold text-brand-ink">
                             {u.role.toUpperCase()}
                           </td>
                           <td className="px-3 py-2.5">
                             {u.is_active !== false ? (
-                              <span className="inline-flex rounded-full border border-[#059669]/40 bg-[#ECFDF5] px-2.5 py-0.5 text-xs font-semibold text-[#065F46]">
+                              <span className="inline-flex rounded-full border border-success/40 bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success-ink">
                                 ACTIVE
                               </span>
                             ) : (
-                              <span className="inline-flex rounded-full border border-[#DC2626]/40 bg-[#FEE2E2] px-2.5 py-0.5 text-xs font-semibold text-[#991B1B]">
+                              <span className="inline-flex rounded-full border border-danger/40 bg-danger-soft px-2.5 py-0.5 text-xs font-semibold text-danger-ink">
                                 INACTIVE
                               </span>
                             )}
@@ -490,13 +490,13 @@ function AdminContent({ user }: { user: SessionUser }) {
               aria-labelledby="admin-tab-guidelines"
               className="mac-card p-5"
             >
-              <h2 className="text-base font-bold text-[#172A33]">
+              <h2 className="text-base font-bold text-ink">
                 {t("admin.tabGuidelines")}
               </h2>
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[680px] border-collapse text-left text-xs">
                   <thead>
-                    <tr className="border-b border-[#DCE6E9] bg-[#F3F7F8] text-[#405663]">
+                    <tr className="border-b border-line bg-canvas text-ink-2">
                       <th scope="col" className="px-3 py-2.5 font-semibold">
                         {t("admin.colCode")}
                       </th>
@@ -509,26 +509,43 @@ function AdminContent({ user }: { user: SessionUser }) {
                       <th scope="col" className="px-3 py-2.5 font-semibold">
                         Viral No-Abx
                       </th>
+                      <th scope="col" className="px-3 py-2.5 font-semibold">
+                        {locale === "bn" ? "উৎস ও সংস্করণ" : "Source & Version"}
+                      </th>
+                      <th scope="col" className="px-3 py-2.5 font-semibold">
+                        {locale === "bn" ? "রিভিউ অবস্থা" : "Review Status"}
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#DCE6E9]">
                     {guidelines.map((g) => (
-                      <tr key={g.id} className="hover:bg-[#F3F7F8]">
-                        <td className="px-3 py-2.5 font-mono font-semibold text-[#172A33]">
+                      <tr key={g.id} className="hover:bg-canvas">
+                        <td className="px-3 py-2.5 font-mono font-semibold text-ink">
                           {g.syndrome_code}
                         </td>
-                        <td className="px-3 py-2.5 text-[#172A33]">
+                        <td className="px-3 py-2.5 text-ink">
                           {locale === "bn" && g.syndrome_name_bn
                             ? g.syndrome_name_bn
                             : g.syndrome_name_en}
                         </td>
-                        <td className="px-3 py-2.5 text-[#405663]">
+                        <td className="px-3 py-2.5 text-ink-2">
                           {g.first_line_drug_codes.join(", ") || "Symptomatic"}
                         </td>
                         <td className="px-3 py-2.5">
                           {g.viral_no_antibiotic_if_mild
                             ? t("common.yes")
                             : t("common.no")}
+                        </td>
+                        <td className="px-3 py-2.5 text-ink-2">
+                          <div className="font-medium text-ink">{g.source_document ?? "WHO AWaRe / DGHS STG"}</div>
+                          <div className="text-[11px] text-ink-3">
+                            v{g.rule_version ?? "2026.1"} · {g.effective_date ?? "2026-01-01"}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span className="inline-flex rounded-full border border-brand/30 bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-ink">
+                            {g.review_status ?? "PENDING_CLINICAL_REVIEW"}
+                          </span>
                         </td>
                       </tr>
                     ))}
@@ -545,13 +562,13 @@ function AdminContent({ user }: { user: SessionUser }) {
               aria-labelledby="admin-tab-catalog"
               className="mac-card p-5"
             >
-              <h2 className="text-base font-bold text-[#172A33]">
+              <h2 className="text-base font-bold text-ink">
                 {t("admin.tabCatalog")}
               </h2>
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[680px] border-collapse text-left text-xs">
                   <thead>
-                    <tr className="border-b border-[#DCE6E9] bg-[#F3F7F8] text-[#405663]">
+                    <tr className="border-b border-line bg-canvas text-ink-2">
                       <th scope="col" className="px-3 py-2.5 font-semibold">
                         {t("admin.colCode")}
                       </th>
@@ -571,20 +588,20 @@ function AdminContent({ user }: { user: SessionUser }) {
                   </thead>
                   <tbody className="divide-y divide-[#DCE6E9]">
                     {catalog.map((d) => (
-                      <tr key={d.id} className="hover:bg-[#F3F7F8]">
-                        <td className="px-3 py-2.5 font-mono font-semibold text-[#172A33]">
+                      <tr key={d.id} className="hover:bg-canvas">
+                        <td className="px-3 py-2.5 font-mono font-semibold text-ink">
                           {d.drug_code}
                         </td>
-                        <td className="px-3 py-2.5 font-medium text-[#172A33]">
+                        <td className="px-3 py-2.5 font-medium text-ink">
                           {d.generic_name}
                         </td>
-                        <td className="px-3 py-2.5 text-[#405663]">
+                        <td className="px-3 py-2.5 text-ink-2">
                           {d.drug_class}
                         </td>
                         <td className="px-3 py-2.5">
                           <StatusBadge variant={d.aware_category} />
                         </td>
-                        <td className="px-3 py-2.5 text-[#405663]">
+                        <td className="px-3 py-2.5 text-ink-2">
                           Age &gt;= {d.min_age_years} · eGFR &gt;={" "}
                           {d.renal_contraindicated_egfr_lt ?? "Any"}
                         </td>
@@ -603,7 +620,7 @@ function AdminContent({ user }: { user: SessionUser }) {
               aria-labelledby="admin-tab-audit"
               className="mac-card p-5"
             >
-              <h2 className="text-base font-bold text-[#172A33]">
+              <h2 className="text-base font-bold text-ink">
                 {t("admin.tabAuditLogs")}
               </h2>
 
@@ -614,7 +631,7 @@ function AdminContent({ user }: { user: SessionUser }) {
                 <div>
                   <label
                     htmlFor="audit-action-filter"
-                    className="block text-xs font-semibold text-[#405663]"
+                    className="block text-xs font-semibold text-ink-2"
                   >
                     {t("admin.auditActionFilter")}
                   </label>
@@ -624,13 +641,13 @@ function AdminContent({ user }: { user: SessionUser }) {
                     value={actionFilter}
                     onChange={(e) => setActionFilter(e.target.value)}
                     placeholder="ADMIN_CREATE_USER"
-                    className="mt-1 rounded-lg border border-[#D1DEE3] px-3 py-1.5 text-xs text-[#172A33]"
+                    className="mt-1 rounded-lg border border-line px-3 py-1.5 text-xs text-ink"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="audit-trace-filter"
-                    className="block text-xs font-semibold text-[#405663]"
+                    className="block text-xs font-semibold text-ink-2"
                   >
                     {t("admin.auditTraceFilter")}
                   </label>
@@ -640,12 +657,12 @@ function AdminContent({ user }: { user: SessionUser }) {
                     value={traceFilter}
                     onChange={(e) => setTraceFilter(e.target.value)}
                     placeholder="trace_id UUID"
-                    className="mt-1 rounded-lg border border-[#D1DEE3] px-3 py-1.5 text-xs text-[#172A33]"
+                    className="mt-1 rounded-lg border border-line px-3 py-1.5 text-xs text-ink"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#115E59]"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-xs font-semibold text-white hover:bg-brand-strong"
                 >
                   <Search aria-hidden="true" className="h-3.5 w-3.5" />
                   <span>{t("admin.applyFiltersBtn")}</span>
@@ -655,7 +672,7 @@ function AdminContent({ user }: { user: SessionUser }) {
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[700px] border-collapse text-left text-xs">
                   <thead>
-                    <tr className="border-b border-[#DCE6E9] bg-[#F3F7F8] text-[#405663]">
+                    <tr className="border-b border-line bg-canvas text-ink-2">
                       <th scope="col" className="px-3 py-2.5 font-semibold">
                         {t("admin.colAction")}
                       </th>
@@ -675,23 +692,23 @@ function AdminContent({ user }: { user: SessionUser }) {
                   </thead>
                   <tbody className="divide-y divide-[#DCE6E9]">
                     {auditLogs.map((log) => (
-                      <tr key={log.id} className="hover:bg-[#F3F7F8]">
-                        <td className="px-3 py-2.5 font-semibold text-[#172A33]">
+                      <tr key={log.id} className="hover:bg-canvas">
+                        <td className="px-3 py-2.5 font-semibold text-ink">
                           {log.action}
                         </td>
-                        <td className="px-3 py-2.5 text-[#405663]">
+                        <td className="px-3 py-2.5 text-ink-2">
                           {log.resource_type}
                           {log.resource_id
                             ? ` (${log.resource_id.slice(0, 8)})`
                             : ""}
                         </td>
-                        <td className="px-3 py-2.5 text-[#405663]">
+                        <td className="px-3 py-2.5 text-ink-2">
                           {log.actor_role ?? "-"}
                         </td>
-                        <td className="px-3 py-2.5 font-mono text-[#536975]">
+                        <td className="px-3 py-2.5 font-mono text-ink-2">
                           {log.trace_id}
                         </td>
-                        <td className="px-3 py-2.5 text-[#536975]">
+                        <td className="px-3 py-2.5 text-ink-2">
                           {log.created_at.slice(0, 19).replace("T", " ")}
                         </td>
                       </tr>

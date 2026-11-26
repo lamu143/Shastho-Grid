@@ -22,6 +22,7 @@ class HospitalResourceOut(BaseModel):
     staffed_capacity_count: int
     available_count: int
     data_source: Literal["SEED_DEMO", "STAFF", "FEED"] = "SEED_DEMO"
+    reported_at: datetime | None = None
     version: int
     updated_at: datetime
 
@@ -35,6 +36,7 @@ class BloodInventoryOut(BaseModel):
     units_reserved: int
     nearest_expiry_date: date | None
     data_source: Literal["SEED_DEMO", "STAFF", "FEED"] = "SEED_DEMO"
+    reported_at: datetime | None = None
     version: int
     updated_at: datetime
 
@@ -135,6 +137,50 @@ class CriticalCareSummaryOut(BaseModel):
     blood_units_by_group: dict[str, int]
     scarce_blood_groups: list[str]
     data_is_simulated: bool = True
+
+
+class InsightCapacity(BaseModel):
+    physical: int = 0
+    staffed: int = 0
+    available: int = 0
+
+
+class InsightBloodCell(BaseModel):
+    units: int
+    reserved: int
+    nearest_expiry_date: date | None
+    expiring_soon: bool
+
+
+class InsightFacility(BaseModel):
+    id: UUID
+    code: str
+    name: str
+    tier: FacilityTier
+    data_freshness: Literal["DEMO", "LIVE", "STALE"]
+    last_updated_at: datetime | None
+    icu: InsightCapacity
+    ventilator: InsightCapacity
+    blood: dict[str, InsightBloodCell]
+
+
+class CriticalCareInsightsOut(BaseModel):
+    window_days: int
+    generated_at: datetime
+    facilities: list[InsightFacility]
+    icu_occupancy_pct: float
+    icu_idle_unstaffed: int
+    ventilators_available: int
+    live_coverage_pct: float
+    blood_units_by_group: dict[str, int]
+    scarce_blood_groups: list[str]
+    expiring_soon_units: int
+    holds_by_status: dict[str, int]
+    hold_expiry_rate_pct: float | None
+    carematch_runs: int
+    carematch_infeasible: int
+    carematch_median_ms: float | None
+    news2_mean: float | None
 
 
 # ------------------------------------------------------------------ CareMatch

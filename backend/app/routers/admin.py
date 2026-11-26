@@ -4,12 +4,16 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.errors import AppError, get_trace_id
 from app.core.idempotency import IdempotencyGuard
+from app.core.rate_limit import is_upstash_configured
+from app.core.telemetry import telemetry
+from app.core.webhooks import dispatch_webhook
 from app.core.security import (
     CurrentUser,
     enforce_clinic_scope,
@@ -172,3 +176,40 @@ async def list_catalog(
     )
     rows = (await db.execute(stmt)).scalars().all()
     return [AntibioticCatalogOut.model_validate(row) for row in rows]
+
+
+@router.get("/telemetry")
+async def get_runtime_telemetry(
+    _: CurrentUser = Depends(require_roles("auditor", "admin")),
+) -> dict:
+    """Datadog-compatible RED metrics snapshot (requests, 4xx/5xx errors, p50/p95/max latency)."""
+    snap = telemetry.snapshot()
+    snap["readiness"] = {
+        "environment": settings.ENVIRONMENT,
+        "allow_demo_data_in_production": settings.ALLOW_DEMO_DATA_IN_PRODUCTION,
+        "rate_limit_fail_closed_on_sensitive": settings.RATE_LIMIT_FAIL_CLOSED_ON_SENSITIVE,
+        "rate_limiter_backend": "upstash" if is_upstash_configured() else "redis",
+    }
+    return snap
+
+
+@router.get("/telemetry/prometheus", response_class=PlainTextResponse)
+async def get_prometheus_metrics(
+    _: CurrentUser = Depends(require_roles("auditor", "admin")),
+) -> PlainTextResponse:
+    """OpenMetrics / Prometheus exposition for Datadog Agent scraping."""
+    return PlainTextResponse(telemetry.to_prometheus(), media_type="text/plain; version=0.0.4; charset=utf-8")
+
+
+@router.post("/webhooks/test")
+async def test_automation_webhook(
+    request: Request,
+    current_user: CurrentUser = Depends(require_roles("admin")),
+) -> dict:
+    """Preview or fire a de-identified Zapier/automation test event."""
+    return await dispatch_webhook(
+        event_type="SHASTHOGRID_WEBHOOK_TEST",
+        trace_id=get_trace_id(request),
+        summary="Test automation alert from ShasthoGrid admin console.",
+        details={"clinic_id": str(current_user.clinic_id), "actor_role": current_user.role},
+    )

@@ -1,0 +1,5 @@
+PubChem Database Citation & Usage Guidelines Notification
+Notified user to review:
+- https://pubchem.ncbi.nlm.nih.gov/docs/citation-guidelines
+- https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest
+Timestamp: 2026-11-26T14:50:30+06:00

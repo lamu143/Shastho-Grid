@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError, get_trace_id
 from app.core.security import (
+    ROLE_SCOPES,
     CurrentUser,
     create_access_token,
     get_current_user,
@@ -156,3 +157,18 @@ async def get_me(current_user: CurrentUser = Depends(get_current_user)) -> UserP
         clinic_name=current_user.clinic_name,
         facility_id=current_user.facility_id,
     )
+
+
+@router.get("/permissions")
+async def get_my_permissions(current_user: CurrentUser = Depends(get_current_user)) -> dict:
+    """Return the authenticated user's RBAC scopes and tenant isolation boundary."""
+    isolation_scope = (
+        "facility" if current_user.role in ("hospital_admin", "blood_bank_officer") else "clinic"
+    )
+    return {
+        "role": current_user.role,
+        "clinic_id": str(current_user.clinic_id),
+        "facility_id": str(current_user.facility_id) if current_user.facility_id else None,
+        "isolation_scope": isolation_scope,
+        "scopes": ROLE_SCOPES.get(current_user.role, []),
+    }

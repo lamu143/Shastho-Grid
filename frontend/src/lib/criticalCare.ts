@@ -80,6 +80,7 @@ export const CareMatchSchema = z.object({
   routing_source: z.string(),
   requires_human_approval: z.boolean(),
   data_is_simulated: z.boolean(),
+  stale_facilities: z.array(z.string()).default([]),
 });
 export type CareMatch = z.infer<typeof CareMatchSchema>;
 
@@ -147,6 +148,10 @@ export const FacilitySchema = z.object({
   icu_available: z.number(),
   icu_staffed: z.number(),
   eta_minutes: z.number().nullable().optional(),
+  // Provenance: DEMO (seeded), LIVE (staff/hospital feed, fresh), STALE (real but not refreshed).
+  data_freshness: z.enum(["DEMO", "LIVE", "STALE"]).default("DEMO"),
+  last_updated_at: z.string().nullable().optional(),
+  data_is_simulated: z.boolean().optional(),
 });
 export type Facility = z.infer<typeof FacilitySchema>;
 
@@ -161,11 +166,15 @@ export const ReservationSchema = z.object({
   reservation_id: z.string(),
   status: z.enum(["HELD", "CONFIRMED", "EN_ROUTE", "ADMITTED", "EXPIRED", "CANCELLED"]),
   hospital_id: z.string(),
+  icu_resource_id: z.string().nullable().optional(),
+  vent_resource_id: z.string().nullable().optional(),
   is_split_dispatch: z.boolean(),
   hold_expires_at: z.string(),
   version: z.number(),
+  created_at: z.string().nullable().optional(),
   blood: z.array(
     z.object({
+      source_facility_id: z.string().optional(),
       donor_blood_type: z.string(),
       recipient_blood_type: z.string(),
       units: z.number(),
@@ -204,12 +213,149 @@ export function transitionReservation(
   });
 }
 
+export function listReservations(status?: Reservation["status"]) {
+  const qs = status ? `?status=${status}` : "";
+  return apiRequest(`/api/v1/reservations${qs}`, {
+    schema: z.object({ items: z.array(ReservationSchema), total: z.number() }),
+  });
+}
+
+/* ---------------------------------------------------- facility console ---- */
+
+const DataSourceSchema = z.enum(["SEED_DEMO", "STAFF", "FEED"]);
+export const ResourceTypeSchema = z.enum(["ICU_BED", "VENTILATOR", "HDU_BED", "NICU_BED"]);
+export type ResourceType = z.infer<typeof ResourceTypeSchema>;
+
+export const HospitalResourceSchema = z.object({
+  id: z.string(),
+  resource_type: ResourceTypeSchema,
+  total_physical_count: z.number(),
+  staffed_capacity_count: z.number(),
+  available_count: z.number(),
+  data_source: DataSourceSchema,
+  reported_at: z.string().nullable().optional(),
+  version: z.number(),
+  updated_at: z.string(),
+});
+export type HospitalResource = z.infer<typeof HospitalResourceSchema>;
+
+export const BloodStockSchema = z.object({
+  id: z.string(),
+  blood_type: BloodGroupSchema,
+  units_available: z.number(),
+  units_reserved: z.number(),
+  nearest_expiry_date: z.string().nullable(),
+  data_source: DataSourceSchema,
+  reported_at: z.string().nullable().optional(),
+  version: z.number(),
+  updated_at: z.string(),
+});
+export type BloodStock = z.infer<typeof BloodStockSchema>;
+
+export const FacilityDetailSchema = FacilitySchema.extend({
+  division: z.string(),
+  district: z.string(),
+  resources: z.array(HospitalResourceSchema),
+  blood: z.array(BloodStockSchema),
+});
+export type FacilityDetail = z.infer<typeof FacilityDetailSchema>;
+
+export function getFacility(id: string) {
+  return apiRequest(`/api/v1/facilities/${id}`, { schema: FacilityDetailSchema });
+}
+
+export function updateResource(
+  facilityId: string,
+  type: ResourceType,
+  body: { total_physical_count?: number; staffed_capacity_count?: number; available_count?: number; expected_version: number }
+) {
+  return apiRequest(`/api/v1/facilities/${facilityId}/resources/${type}`, {
+    method: "PATCH",
+    body,
+    schema: HospitalResourceSchema,
+  });
+}
+
+export function updateBlood(
+  facilityId: string,
+  group: BloodGroup,
+  body: { units_available: number; nearest_expiry_date?: string | null; expected_version: number }
+) {
+  return apiRequest(`/api/v1/facilities/${facilityId}/blood/${encodeURIComponent(group)}`, {
+    method: "PATCH",
+    body,
+    schema: BloodStockSchema,
+  });
+}
+
+export const FeedKeySchema = z.object({
+  id: z.string(),
+  facility_id: z.string(),
+  label: z.string(),
+  scope: z.enum(["RESOURCES", "BLOOD", "ALL"]).default("ALL"),
+  key_prefix: z.string(),
+  created_at: z.string(),
+  last_used_at: z.string().nullable(),
+  revoked_at: z.string().nullable(),
+});
+export type FeedKey = z.infer<typeof FeedKeySchema>;
+
+export function listFeedKeys(facilityId: string) {
+  return apiRequest(`/api/v1/facilities/${facilityId}/feed-keys`, {
+    schema: z.object({ items: z.array(FeedKeySchema) }),
+  });
+}
+
+export function createFeedKey(facilityId: string, label: string, scope?: FeedKey["scope"]) {
+  return apiRequest(`/api/v1/facilities/${facilityId}/feed-keys`, {
+    method: "POST",
+    body: scope ? { label, scope } : { label },
+    schema: FeedKeySchema.extend({ api_key: z.string() }),
+  });
+}
+
+export function revokeFeedKey(facilityId: string, keyId: string) {
+  return apiRequest(`/api/v1/facilities/${facilityId}/feed-keys/${keyId}`, {
+    method: "DELETE",
+    schema: FeedKeySchema,
+  });
+}
+
+export const RaceLabStatusSchema = z.object({
+  facility_id: z.string(),
+  facility_code: z.string(),
+  facility_name: z.string(),
+  resource_id: z.string(),
+  available_count: z.number(),
+  staffed_capacity_count: z.number(),
+  total_physical_count: z.number(),
+  active_held_count: z.number(),
+  active_reservation_id: z.string().nullable(),
+  hold_expires_at: z.string().nullable(),
+});
+export type RaceLabStatus = z.infer<typeof RaceLabStatusSchema>;
+
+export function racelabStatus() {
+  return apiRequest("/api/v1/racelab/status", {
+    schema: RaceLabStatusSchema,
+  });
+}
+
 export function racelabReset() {
   return apiRequest("/api/v1/racelab/reset", {
     method: "POST",
     schema: z.object({ facility_id: z.string(), resource_id: z.string(), available_count: z.number() }),
   });
 }
+
+export const RaceAttemptSchema = z.object({
+  attempt: z.number(),
+  status: z.number(),
+  detail: z.string(),
+  ms: z.number(),
+  started_offset_ms: z.number().optional(),
+  finished_offset_ms: z.number().optional(),
+});
 
 export const RaceRunSchema = z.object({
   concurrency: z.number(),
@@ -218,7 +364,9 @@ export const RaceRunSchema = z.object({
   errors: z.number(),
   db_available_after: z.number(),
   double_bookings: z.number(),
-  attempts: z.array(z.object({ attempt: z.number(), status: z.number(), detail: z.string(), ms: z.number() })),
+  wall_time_ms: z.number().optional(),
+  winner_reservation_id: z.string().nullable().optional(),
+  attempts: z.array(RaceAttemptSchema),
 });
 export type RaceRun = z.infer<typeof RaceRunSchema>;
 

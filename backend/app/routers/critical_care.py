@@ -9,7 +9,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -21,7 +21,7 @@ from app.core.security import (
     get_current_user,
     require_roles,
 )
-from app.db.models import AuditLog, BloodInventory, Facility, HospitalResource, TriageRequest
+from app.db.models import AuditLog, BloodInventory, Facility, HospitalResource, Reservation, TriageRequest, User
 from app.db.session import get_db
 from app.schemas.critical_care import (
     BloodCompatibilityOut,
@@ -31,6 +31,7 @@ from app.schemas.critical_care import (
     CareMatchIn,
     CareMatchOut,
     ConflictProofOut,
+    CriticalCareInsightsOut,
     CriticalCareSummaryOut,
     FacilityListOut,
     FacilityOut,
@@ -38,6 +39,9 @@ from app.schemas.critical_care import (
     FacilityTier,
     HospitalOptionOut,
     HospitalResourceOut,
+    InsightBloodCell,
+    InsightCapacity,
+    InsightFacility,
     News2In,
     News2Out,
     ResourceType,
@@ -172,8 +176,9 @@ async def list_facilities(
     if tier:
         stmt = stmt.where(Facility.tier == tier)
     if q:
-        like = f"%{q.strip()}%"
-        stmt = stmt.where(Facility.name.ilike(like) | Facility.code.ilike(like))
+        escaped = q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        like = f"%{escaped}%"
+        stmt = stmt.where(Facility.name.ilike(like, escape="\\") | Facility.code.ilike(like, escape="\\"))
     facilities = (await db.execute(stmt)).scalars().all()
 
     items: list[FacilityOut] = []
@@ -379,6 +384,112 @@ async def critical_care_summary(
     )
 
 
+EXPIRING_SOON_DAYS = 7
+
+
+@router.get("/critical-care/insights", response_model=CriticalCareInsightsOut)
+async def critical_care_insights(
+    _: Annotated[
+        CurrentUser,
+        Depends(require_roles("dispatcher", "hospital_admin", "blood_bank_officer", "auditor", "admin")),
+    ],
+    db: Annotated[AsyncSession, Depends(get_db)],
+    days: Annotated[int, Query(ge=1, le=90)] = 7,
+) -> CriticalCareInsightsOut:
+    """StewardLens for critical care: capacity, blood scarcity, data freshness and hold outcomes."""
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(days=days)
+    soon = (now + timedelta(days=EXPIRING_SOON_DAYS)).date()
+
+    facilities = (
+        await db.execute(
+            select(Facility)
+            .options(selectinload(Facility.resources), selectinload(Facility.blood))
+            .where(Facility.is_active.is_(True))
+            .order_by(Facility.code)
+        )
+    ).scalars().all()
+
+    rows: list[InsightFacility] = []
+    blood_totals: dict[str, int] = {g: 0 for g in RBC_DONORS}
+    expiring_units = 0
+    live = 0
+    icu_staffed = icu_avail = icu_physical = vents = 0
+    for f in facilities:
+        freshness, last, _sim = facility_freshness(f)
+        live += freshness == "LIVE"
+        caps = {r.resource_type: r for r in f.resources}
+
+        def cap(kind: str) -> InsightCapacity:
+            r = caps.get(kind)
+            return InsightCapacity(
+                physical=r.total_physical_count, staffed=r.staffed_capacity_count, available=r.available_count
+            ) if r else InsightCapacity()
+
+        icu, vent = cap("ICU_BED"), cap("VENTILATOR")
+        icu_physical += icu.physical
+        icu_staffed += icu.staffed
+        icu_avail += icu.available
+        vents += vent.available
+        cells: dict[str, InsightBloodCell] = {}
+        for b in f.blood:
+            exp_soon = bool(b.nearest_expiry_date and b.nearest_expiry_date <= soon and b.units_available > 0)
+            expiring_units += b.units_available if exp_soon else 0
+            blood_totals[b.blood_type] += b.units_available
+            cells[b.blood_type] = InsightBloodCell(
+                units=b.units_available,
+                reserved=b.units_reserved,
+                nearest_expiry_date=b.nearest_expiry_date,
+                expiring_soon=exp_soon,
+            )
+        rows.append(
+            InsightFacility(
+                id=f.id, code=f.code, name=f.name, tier=f.tier, data_freshness=freshness,
+                last_updated_at=last, icu=icu, ventilator=vent, blood=cells,
+            )
+        )
+
+    status_rows = (
+        await db.execute(
+            select(Reservation.status, func.count())
+            .where(Reservation.created_at >= since)
+            .group_by(Reservation.status)
+        )
+    ).all()
+    holds = {s: 0 for s in ("HELD", "CONFIRMED", "EN_ROUTE", "ADMITTED", "EXPIRED", "CANCELLED")}
+    for status, n in status_rows:
+        holds[status] = n
+    terminal = holds["ADMITTED"] + holds["EXPIRED"] + holds["CANCELLED"]
+
+    runs = (
+        await db.execute(
+            select(TriageRequest.solver_status, TriageRequest.solver_wall_time_ms, TriageRequest.news2_score)
+            .where(TriageRequest.created_at >= since)
+        )
+    ).all()
+    walls = sorted(float(r.solver_wall_time_ms) for r in runs)
+    scores = [r.news2_score for r in runs if r.news2_score is not None]
+
+    return CriticalCareInsightsOut(
+        window_days=days,
+        generated_at=now,
+        facilities=rows,
+        icu_occupancy_pct=round(100 * (icu_staffed - icu_avail) / icu_staffed, 1) if icu_staffed else 0.0,
+        icu_idle_unstaffed=icu_physical - icu_staffed,
+        ventilators_available=vents,
+        live_coverage_pct=round(100 * live / len(facilities), 1) if facilities else 0.0,
+        blood_units_by_group=blood_totals,
+        scarce_blood_groups=[g for g, u in blood_totals.items() if u < SCARCE_UNITS_THRESHOLD],
+        expiring_soon_units=expiring_units,
+        holds_by_status=holds,
+        hold_expiry_rate_pct=round(100 * holds["EXPIRED"] / terminal, 1) if terminal else None,
+        carematch_runs=len(runs),
+        carematch_infeasible=sum(1 for r in runs if r.solver_status == "INFEASIBLE"),
+        carematch_median_ms=round(walls[len(walls) // 2], 1) if walls else None,
+        news2_mean=round(sum(scores) / len(scores), 1) if scores else None,
+    )
+
+
 @router.post("/pulsescore/news2", response_model=News2Out)
 async def pulsescore_news2(
     payload: News2In,
@@ -429,6 +540,18 @@ async def execute_carematch(
             .where(Facility.is_active.is_(True))
         )
     ).scalars().all()
+
+    if (
+        settings.ENVIRONMENT.strip().lower() not in {"development", "dev", "local", "test"}
+        and not settings.ALLOW_DEMO_DATA_IN_PRODUCTION
+    ):
+        facilities = [f for f in facilities if not facility_freshness(f)[2]]
+        if not facilities:
+            raise AppError(
+                status_code=503,
+                error_code="DEMO_DATA_BLOCKED_IN_PRODUCTION",
+                message="Operational dispatch is blocked in production while all active facilities carry simulated demo data.",
+            )
 
     snapshots: list[FacilitySnapshot] = []
     sources: set[str] = set()
@@ -541,7 +664,15 @@ async def carematch_get(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> CareMatchOut:
     triage = await db.get(TriageRequest, triage_request_id)
-    if triage is None or (user.role not in ("admin", "auditor") and triage.created_by_user_id != user.id):
+    if triage is None:
+        raise NotFoundError("Triage request not found.", error_code="TRIAGE_NOT_FOUND")
+    if user.role in ("admin", "auditor"):
+        creator_clinic_id = (
+            await db.execute(select(User.clinic_id).where(User.id == triage.created_by_user_id))
+        ).scalar_one_or_none()
+        if creator_clinic_id != user.clinic_id:
+            raise NotFoundError("Triage request not found.", error_code="TRIAGE_NOT_FOUND")
+    elif triage.created_by_user_id != user.id:
         raise NotFoundError("Triage request not found.", error_code="TRIAGE_NOT_FOUND")
     news2 = None
     if triage.vitals:

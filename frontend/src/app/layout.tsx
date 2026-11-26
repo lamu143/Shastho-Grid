@@ -66,10 +66,16 @@ const jsonLd = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0F766E",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F4F7F8" },
+    { media: "(prefers-color-scheme: dark)", color: "#090F12" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
+
+/** Reads the saved theme (light default | aurora | dark | ocean | system) and sets <html data-theme> before paint. */
+const THEME_BOOT = `(function(){var t="light";try{var c=localStorage.getItem("awaregrid_theme")||"light";if(c==="system"){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}else if(["light","aurora","dark","ocean"].indexOf(c)>-1){t=c;}}catch(e){}document.documentElement.dataset.theme=t;})();`;
 
 export default function RootLayout({
   children,
@@ -79,9 +85,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${inter.variable} ${notoSansBengali.variable} h-full antialiased`}
     >
-      <body suppressHydrationWarning className="min-h-full bg-[#F3F7F8] font-sans text-[#172A33]">
+      <head>
+        {/* Resolve the colour theme before first paint (no light flash in dark mode). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
+      <body suppressHydrationWarning className="min-h-full font-sans text-ink">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

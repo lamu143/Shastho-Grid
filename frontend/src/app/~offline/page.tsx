@@ -28,20 +28,20 @@ export default function OfflineFallbackPage() {
       <section className="mac-card p-6 sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FEF3C7] text-[#92400E]">
-              <CloudOff aria-hidden="true" className="h-6 w-6 text-[#D97706]" />
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-warn-soft text-warn-ink">
+              <CloudOff aria-hidden="true" className="h-6 w-6 text-warn-ink" />
             </span>
             <div>
-              <h1 className="text-xl font-bold text-[#172A33] sm:text-2xl">
+              <h1 className="text-xl font-bold text-ink sm:text-2xl">
                 {t("offline.title")}
               </h1>
-              <p className="text-sm text-[#536975]">{t("status.offlineNotice")}</p>
+              <p className="text-sm text-ink-2">{t("status.offlineNotice")}</p>
             </div>
           </div>
           <StatusBadge variant="OFFLINE" />
         </div>
 
-        <p className="mt-4 text-sm leading-relaxed text-[#405663]">
+        <p className="mt-4 text-sm leading-relaxed text-ink-2">
           {t("offline.subtitle")}
         </p>
 
@@ -53,23 +53,23 @@ export default function OfflineFallbackPage() {
                 window.location.reload();
               }
             }}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#115E59]"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-strong"
           >
             <RotateCw aria-hidden="true" className="h-4 w-4" />
             <span>{t("offline.retry")}</span>
           </button>
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-lg border border-[#DCE6E9] bg-[#FFFFFF] px-4 py-2.5 text-sm font-semibold text-[#172A33] hover:bg-[#EDF3F5]"
+            className="inline-flex items-center gap-2 rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-ink hover:bg-fill"
           >
-            <LayoutDashboard aria-hidden="true" className="h-4 w-4 text-[#0F766E]" />
+            <LayoutDashboard aria-hidden="true" className="h-4 w-4 text-brand-ink" />
             <span>{t("nav.dashboard")}</span>
           </Link>
         </div>
       </section>
 
       <section className="mac-card p-6">
-        <h2 className="text-base font-bold text-[#172A33]">
+        <h2 className="text-base font-bold text-ink">
           {t("offline.cachedRoutes")}
         </h2>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -79,9 +79,9 @@ export default function OfflineFallbackPage() {
               <Link
                 key={route.href}
                 href={route.href}
-                className="flex items-center gap-3 rounded-lg border border-[#DCE6E9] bg-[#F3F7F8] p-3.5 text-sm font-semibold text-[#172A33] transition-colors hover:border-[#0F766E] hover:bg-[#F0FDFA]"
+                className="flex items-center gap-3 rounded-lg border border-line bg-canvas p-3.5 text-sm font-semibold text-ink transition-colors hover:border-brand hover:bg-brand-soft"
               >
-                <Icon aria-hidden="true" className="h-5 w-5 shrink-0 text-[#0F766E]" />
+                <Icon aria-hidden="true" className="h-5 w-5 shrink-0 text-brand-ink" />
                 <span>{route.label}</span>
               </Link>
             );

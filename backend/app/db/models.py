@@ -152,6 +152,24 @@ class AwareGuideline(Base):
     default_duration_days: Mapped[int] = mapped_column(Integer, nullable=False)
     guidance_en: Mapped[str] = mapped_column(Text, nullable=False)
     guidance_bn: Mapped[str] = mapped_column(Text, nullable=False)
+    source_document: Mapped[str] = mapped_column(
+        String(160),
+        nullable=False,
+        default="WHO AWaRe Antibiotic Book / DGHS Bangladesh",
+        server_default="WHO AWaRe Antibiotic Book / DGHS Bangladesh",
+    )
+    rule_version: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="2026.1-demo", server_default="2026.1-demo"
+    )
+    effective_date: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="2026-01-01", server_default="2026-01-01"
+    )
+    review_status: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default="PENDING_CLINICAL_REVIEW",
+        server_default="PENDING_CLINICAL_REVIEW",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=utcnow, server_default=text("now()")
     )
@@ -707,6 +725,8 @@ class FacilityFeedKey(Base):
         PG_UUID(as_uuid=True), ForeignKey("facilities.id", ondelete="CASCADE"), nullable=False
     )
     label: Mapped[str] = mapped_column(String(80), nullable=False)
+    # RESOURCES (beds/ventilators), BLOOD, or ALL. Least privilege per creating role.
+    scope: Mapped[str] = mapped_column(String(12), nullable=False, default="ALL", server_default="ALL")
     key_prefix: Mapped[str] = mapped_column(String(16), nullable=False)
     key_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
     created_by_user_id: Mapped[uuid.UUID] = mapped_column(

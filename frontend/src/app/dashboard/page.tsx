@@ -269,10 +269,10 @@ function DashboardContent({ user }: { user: SessionUser }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight text-[#172A33] sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
             {t("dashboard.title")}
           </h1>
-          <p className="text-sm text-[#536975]">
+          <p className="text-sm text-ink-2">
             {user.clinic_name} · {user.role.toUpperCase()} — {t("dashboard.subtitle")}
           </p>
         </div>
@@ -280,23 +280,23 @@ function DashboardContent({ user }: { user: SessionUser }) {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/dashboard/triage"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#115E59]"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-xs font-semibold text-white hover:bg-brand-strong"
           >
             <Stethoscope aria-hidden="true" className="h-3.5 w-3.5" />
             <span>{t("dashboard.openTriage")}</span>
           </Link>
           <Link
             href="/dashboard/inventory"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#DCE6E9] bg-[#FFFFFF] px-3.5 py-2 text-xs font-semibold text-[#172A33] hover:bg-[#EDF3F5]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-ink hover:bg-fill"
           >
-            <Package aria-hidden="true" className="h-3.5 w-3.5 text-[#0F766E]" />
+            <Package aria-hidden="true" className="h-3.5 w-3.5 text-brand-ink" />
             <span>{t("dashboard.openInventory")}</span>
           </Link>
           <Link
             href="/dashboard/sync"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#DCE6E9] bg-[#FFFFFF] px-3.5 py-2 text-xs font-semibold text-[#172A33] hover:bg-[#EDF3F5]"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-ink hover:bg-fill"
           >
-            <RefreshCw aria-hidden="true" className="h-3.5 w-3.5 text-[#0F766E]" />
+            <RefreshCw aria-hidden="true" className="h-3.5 w-3.5 text-brand-ink" />
             <span>{t("dashboard.openSync")}</span>
           </Link>
         </div>
@@ -305,7 +305,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
       {isReadOnlyAuditor && (
         <div
           role="status"
-          className="rounded-lg border border-[#0284C7]/40 bg-[#E0F2FE] px-4 py-2.5 text-xs font-semibold text-[#075985]"
+          className="rounded-lg border border-info/40 bg-info-soft px-4 py-2.5 text-xs font-semibold text-info-ink"
         >
           {t("common.readOnlyAuditor")}
         </div>
@@ -314,7 +314,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
       {errorMsg && (
         <div
           role="alert"
-          className="rounded-lg border border-[#DC2626]/40 bg-[#FEE2E2] px-4 py-3 text-sm font-medium text-[#991B1B]"
+          className="rounded-lg border border-danger/40 bg-danger-soft px-4 py-3 text-sm font-medium text-danger-ink"
         >
           {errorMsg}
         </div>
@@ -323,7 +323,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
       {noticeMsg && (
         <div
           role="status"
-          className="rounded-lg border border-[#059669]/40 bg-[#ECFDF5] px-4 py-3 text-sm font-medium text-[#065F46]"
+          className="rounded-lg border border-success/40 bg-success-soft px-4 py-3 text-sm font-medium text-success-ink"
         >
           {noticeMsg}
         </div>
@@ -337,10 +337,10 @@ function DashboardContent({ user }: { user: SessionUser }) {
       >
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
-            <h2 className="text-base font-bold text-[#172A33]">
+            <h2 className="text-base font-bold text-ink">
               {t("dashboard.queueTitle")}
             </h2>
-            <p className="text-xs text-[#536975]">
+            <p className="text-xs text-ink-2">
               {t("dashboard.pharmacistGateHint")}
             </p>
           </div>
@@ -349,7 +349,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
             <div>
               <label
                 htmlFor="filter-dispense-status"
-                className="block text-xs font-semibold text-[#405663]"
+                className="block text-xs font-semibold text-ink-2"
               >
                 {t("dashboard.filterStatus")}
               </label>
@@ -359,7 +359,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
                 onChange={(e) =>
                   setStatusFilter(e.target.value as DispenseStatus | "ALL")
                 }
-                className="mt-1 rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-1.5 text-xs font-medium text-[#172A33]"
+                className="mt-1 rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink"
               >
                 <option value="ALL">{t("common.all")}</option>
                 <option value="DRAFT">{t("status.DRAFT")}</option>
@@ -375,7 +375,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
             <div>
               <label
                 htmlFor="filter-dispense-tier"
-                className="block text-xs font-semibold text-[#405663]"
+                className="block text-xs font-semibold text-ink-2"
               >
                 {t("dashboard.filterTier")}
               </label>
@@ -385,7 +385,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
                 onChange={(e) =>
                   setTierFilter(e.target.value as AwareVerdictCategory | "ALL")
                 }
-                className="mt-1 rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-1.5 text-xs font-medium text-[#172A33]"
+                className="mt-1 rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink"
               >
                 <option value="ALL">{t("common.all")}</option>
                 <option value="ACCESS">{t("aware.ACCESS")}</option>
@@ -399,7 +399,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
               <div>
                 <label
                   htmlFor="dispense-action-reason"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("dashboard.reasonLabel")}
                 </label>
@@ -409,7 +409,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder={t("dashboard.reasonPlaceholder")}
-                  className="mt-1 rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-1.5 text-xs text-[#172A33] placeholder:text-[#5C727E]"
+                  className="mt-1 rounded-lg border border-line bg-surface px-3 py-1.5 text-xs text-ink placeholder:text-ink-3"
                 />
               </div>
             )}
@@ -418,15 +418,15 @@ function DashboardContent({ user }: { user: SessionUser }) {
 
         <div className="mt-4 overflow-x-auto">
           {loading ? (
-            <p className="py-6 text-sm text-[#536975]">{t("common.loading")}</p>
+            <p className="py-6 text-sm text-ink-2">{t("common.loading")}</p>
           ) : filteredDispenses.length === 0 ? (
-            <p className="py-6 text-sm text-[#536975]">
+            <p className="py-6 text-sm text-ink-2">
               {t("dashboard.noDispenses")}
             </p>
           ) : (
             <table className="w-full min-w-[720px] border-collapse text-left text-xs">
               <thead>
-                <tr className="border-b border-[#DCE6E9] bg-[#F3F7F8] text-[#405663]">
+                <tr className="border-b border-line bg-canvas text-ink-2">
                   <th scope="col" className="px-3 py-2.5 font-semibold">
                     {t("dashboard.colPatient")}
                   </th>
@@ -463,26 +463,26 @@ function DashboardContent({ user }: { user: SessionUser }) {
                   const isBusy = busyId === d.id;
 
                   return (
-                    <tr key={d.id} className="hover:bg-[#F3F7F8]">
-                      <td className="px-3 py-3 font-medium text-[#172A33]">
+                    <tr key={d.id} className="hover:bg-canvas">
+                      <td className="px-3 py-3 font-medium text-ink">
                         <div>{d.patient_name ?? patient?.full_name ?? d.patient_id.slice(0, 8)}</div>
-                        <div className="text-[11px] text-[#536975]">
+                        <div className="text-[11px] text-ink-2">
                           {patient?.mrn ?? ""}
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-[#405663]">
-                        {d.syndrome_code}
+                      <td className="px-3 py-3 text-ink-2">
+                        {d.syndrome_code.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (ch) => ch.toUpperCase())}
                       </td>
-                      <td className="px-3 py-3 text-[#405663]">
-                        <div className="font-medium text-[#172A33]">{drugLabel}</div>
-                        <div className="text-[11px] text-[#536975]">
+                      <td className="px-3 py-3 text-ink-2">
+                        <div className="font-medium text-ink">{drugLabel}</div>
+                        <div className="text-[11px] text-ink-2">
                           Lot: {lotLabel}
                         </div>
                       </td>
                       <td className="px-3 py-3">
                         <StatusBadge variant={d.aware_category} />
                       </td>
-                      <td className="px-3 py-3 font-semibold text-[#172A33]">
+                      <td className="px-3 py-3 font-semibold text-ink">
                         {d.qty}
                       </td>
                       <td className="px-3 py-3">
@@ -495,7 +495,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
                               type="button"
                               disabled={isBusy}
                               onClick={() => handleWorkflowAction(d, "SUBMIT")}
-                              className="inline-flex items-center gap-1 rounded-md bg-[#0F766E] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#115E59] disabled:opacity-60"
+                              className="inline-flex items-center gap-1 rounded-md bg-brand px-2.5 py-1 text-xs font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
                             >
                               <Send aria-hidden="true" className="h-3 w-3" />
                               <span>{t("dashboard.submitBtn")}</span>
@@ -511,7 +511,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
                                   onClick={() =>
                                     handleWorkflowAction(d, "APPROVE")
                                   }
-                                  className="inline-flex items-center gap-1 rounded-md bg-[#0F766E] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#115E59] disabled:opacity-60"
+                                  className="inline-flex items-center gap-1 rounded-md bg-brand px-2.5 py-1 text-xs font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
                                 >
                                   <Check aria-hidden="true" className="h-3 w-3" />
                                   <span>{t("dashboard.approveBtn")}</span>
@@ -522,7 +522,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
                                   onClick={() =>
                                     handleWorkflowAction(d, "REJECT")
                                   }
-                                  className="inline-flex items-center gap-1 rounded-md border border-[#DC2626]/40 bg-[#FEE2E2] px-2.5 py-1 text-xs font-semibold text-[#991B1B] hover:bg-[#FECACA] disabled:opacity-60"
+                                  className="inline-flex items-center gap-1 rounded-md border border-danger/40 bg-danger-soft px-2.5 py-1 text-xs font-semibold text-danger-ink hover:bg-danger-soft disabled:opacity-60"
                                 >
                                   <XCircle aria-hidden="true" className="h-3 w-3" />
                                   <span>{t("dashboard.rejectBtn")}</span>
@@ -537,7 +537,7 @@ function DashboardContent({ user }: { user: SessionUser }) {
                                 type="button"
                                 disabled={isBusy}
                                 onClick={() => handleWorkflowAction(d, "VOID")}
-                                className="inline-flex items-center gap-1 rounded-md border border-[#D1DEE3] bg-[#F3F7F8] px-2.5 py-1 text-xs font-semibold text-[#405663] hover:bg-[#EDF3F5] disabled:opacity-60"
+                                className="inline-flex items-center gap-1 rounded-md border border-line bg-canvas px-2.5 py-1 text-xs font-semibold text-ink-2 hover:bg-fill disabled:opacity-60"
                               >
                                 <Trash2 aria-hidden="true" className="h-3 w-3" />
                                 <span>{t("dashboard.voidBtn")}</span>

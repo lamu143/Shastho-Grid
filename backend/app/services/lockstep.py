@@ -77,6 +77,7 @@ def reservation_body(r: Reservation) -> dict[str, Any]:
         "hold_expires_at": r.hold_expires_at.isoformat(),
         "triage_request_id": str(r.triage_request_id) if r.triage_request_id else None,
         "version": r.version,
+        "created_at": r.created_at.isoformat() if r.created_at else None,
         "blood": [
             {
                 "dispatch_id": str(b.id),
@@ -114,6 +115,9 @@ async def create_reservation(
     if not req.needs_icu and not req.needs_vent:
         raise ValidationAppError("Request at least an ICU bed or a ventilator.", error_code="NOTHING_TO_RESERVE")
     hospital = await _hospital(db, req.hospital_id)
+    if hospital.code == RACELAB_FACILITY_CODE and req.blood is not None:
+        # The sandbox must never hold real stock from a live blood bank.
+        raise ValidationAppError("RaceLab sandbox holds cannot reserve blood.", error_code="SANDBOX_NO_BLOOD")
 
     wanted = [t for t, need in (("ICU_BED", req.needs_icu), ("VENTILATOR", req.needs_vent)) if need]
 
@@ -324,7 +328,8 @@ async def transition(
 ) -> Reservation:
     """Move a (row-locked) reservation through its lifecycle. Caller commits."""
     current = reservation.status
-    if current == "HELD" and reservation.hold_expires_at <= datetime.now(timezone.utc):
+    # Cancelling an overdue hold is always allowed: it is exactly what returns the stock.
+    if current == "HELD" and target != "CANCELLED" and reservation.hold_expires_at <= datetime.now(timezone.utc):
         raise AppError(
             status_code=409,
             error_code="HOLD_EXPIRED",

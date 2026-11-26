@@ -10,6 +10,13 @@ import { listOfflineVaultUsers, type OfflineAuthRecord } from "@/db/dexie";
 import { bootstrapClinicState } from "@/lib/syncEngine";
 import { ApiError } from "@/lib/api";
 
+/** Each role lands on the screen it actually works in. */
+function homeFor(role: string | undefined): string {
+  if (role === "dispatcher") return "/dispatch";
+  if (role === "hospital_admin" || role === "blood_bank_officer") return "/facility";
+  return "/dashboard";
+}
+
 const credentialsSchema = z.object({
   email: z.string().trim().email("Please enter a valid clinic email address."),
   password: z.string().min(1, "Password is required."),
@@ -37,8 +44,16 @@ interface DemoAccount {
   role: string;
 }
 
-// Ashulia accounts are ordered strictly before Dhamrai so /dispenser/i selects Ashulia first.
+// Put the judge-friendly Admin demo first; keep Ashulia before Dhamrai for dispenser quick-fill.
 const DEMO_ACCOUNTS: DemoAccount[] = [
+  {
+    id: "ashulia-admin",
+    labelKey: "auth.roleAdmin",
+    email: "admin@awaregrid.org",
+    password: "Admin#2026!",
+    clinic: "Ashulia Union Sub-Center",
+    role: "admin",
+  },
   {
     id: "ashulia-dispenser",
     labelKey: "auth.roleDispenser",
@@ -62,14 +77,6 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     password: "Auditor#2026!",
     clinic: "Ashulia Union Sub-Center",
     role: "auditor",
-  },
-  {
-    id: "ashulia-admin",
-    labelKey: "auth.roleAdmin",
-    email: "admin@awaregrid.org",
-    password: "Admin#2026!",
-    clinic: "Ashulia Union Sub-Center",
-    role: "admin",
   },
   {
     id: "dhamrai-dispenser",
@@ -171,7 +178,7 @@ export default function LoginPage() {
           // Non-blocking cache hydration
         }
       }
-      router.push(signedInUser.role === "dispatcher" ? "/dispatch" : "/dashboard");
+      router.push(homeFor(signedInUser.role));
     } catch (err) {
       if (err instanceof ApiError) {
         setErrorMsg(err.message);
@@ -209,8 +216,8 @@ export default function LoginPage() {
 
     setSubmitting(true);
     try {
-      await unlockWithOfflinePin(parsed.data.email, parsed.data.pin);
-      router.push("/dashboard");
+      const unlocked = await unlockWithOfflinePin(parsed.data.email, parsed.data.pin);
+      router.push(homeFor(unlocked?.role));
     } catch (err) {
       setErrorMsg(
         err instanceof Error
@@ -225,10 +232,10 @@ export default function LoginPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-[#172A33] sm:text-3xl">
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
           {t("auth.title")}
         </h1>
-        <p className="text-sm text-[#536975]">{t("auth.subtitle")}</p>
+        <p className="text-sm text-ink-2">{t("auth.subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -239,7 +246,7 @@ export default function LoginPage() {
           <div
             role="tablist"
             aria-label={t("auth.title")}
-            className="mb-5 flex flex-wrap gap-2 border-b border-[#DCE6E9] pb-3"
+            className="mb-5 flex flex-wrap gap-2 border-b border-line pb-3"
           >
             <button
               type="button"
@@ -251,10 +258,10 @@ export default function LoginPage() {
                 setActiveTab("credentials");
                 setErrorMsg(null);
               }}
-              className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F766E] ${
+              className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
                 activeTab === "credentials"
-                  ? "bg-[#0F766E] text-white"
-                  : "border border-[#DCE6E9] bg-[#F3F7F8] text-[#405663] hover:bg-[#EDF3F5]"
+                  ? "bg-brand text-white"
+                  : "border border-line bg-canvas text-ink-2 hover:bg-fill"
               }`}
             >
               <LogIn aria-hidden="true" className="h-3.5 w-3.5" />
@@ -271,10 +278,10 @@ export default function LoginPage() {
                 setActiveTab("pin");
                 setErrorMsg(null);
               }}
-              className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0F766E] ${
+              className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
                 activeTab === "pin"
-                  ? "bg-[#0F766E] text-white"
-                  : "border border-[#DCE6E9] bg-[#F3F7F8] text-[#405663] hover:bg-[#EDF3F5]"
+                  ? "bg-brand text-white"
+                  : "border border-line bg-canvas text-ink-2 hover:bg-fill"
               }`}
             >
               <KeyRound aria-hidden="true" className="h-3.5 w-3.5" />
@@ -285,7 +292,7 @@ export default function LoginPage() {
           {errorMsg && (
             <div
               role="alert"
-              className="mb-4 rounded-lg border border-[#DC2626]/40 bg-[#FEE2E2] px-4 py-3 text-sm font-medium text-[#991B1B]"
+              className="mb-4 rounded-lg border border-danger/40 bg-danger-soft px-4 py-3 text-sm font-medium text-danger-ink"
             >
               {errorMsg}
             </div>
@@ -302,7 +309,7 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="login-email"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("auth.emailLabel")}
                 </label>
@@ -315,14 +322,14 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t("auth.emailPlaceholder")}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33] placeholder:text-[#5C727E] focus:border-[#0F766E] focus:outline-none"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label
                   htmlFor="login-password"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("auth.passwordLabel")}
                 </label>
@@ -335,14 +342,14 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t("auth.passwordPlaceholder")}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33] placeholder:text-[#5C727E] focus:border-[#0F766E] focus:outline-none"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#115E59] disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-strong disabled:opacity-60"
               >
                 <LogIn aria-hidden="true" className="h-4 w-4" />
                 <span>
@@ -358,14 +365,14 @@ export default function LoginPage() {
               onSubmit={handleOfflinePinSubmit}
               className="space-y-4"
             >
-              <p className="rounded-lg border border-[#DCE6E9] bg-[#F3F7F8] px-3 py-2 text-xs text-[#536975]">
+              <p className="rounded-lg border border-line bg-canvas px-3 py-2 text-xs text-ink-2">
                 {t("auth.pinHint")}
               </p>
 
               <div className="space-y-1.5">
                 <label
                   htmlFor="pin-email"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("auth.pinEmailLabel")}
                 </label>
@@ -377,14 +384,14 @@ export default function LoginPage() {
                   value={pinEmail}
                   onChange={(e) => setPinEmail(e.target.value)}
                   placeholder={t("auth.emailPlaceholder")}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33] placeholder:text-[#5C727E] focus:border-[#0F766E] focus:outline-none"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label
                   htmlFor="offline-pin"
-                  className="block text-xs font-semibold text-[#405663]"
+                  className="block text-xs font-semibold text-ink-2"
                 >
                   {t("auth.pinLabel")}
                 </label>
@@ -397,14 +404,14 @@ export default function LoginPage() {
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   placeholder={t("auth.pinPlaceholder")}
-                  className="w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-sm text-[#172A33] placeholder:text-[#5C727E] focus:border-[#0F766E] focus:outline-none"
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-3 focus:border-brand focus:outline-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0F766E] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#115E59] disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-strong disabled:opacity-60"
               >
                 <KeyRound aria-hidden="true" className="h-4 w-4" />
                 <span>
@@ -413,11 +420,11 @@ export default function LoginPage() {
               </button>
 
               <div className="pt-2">
-                <h2 className="text-xs font-bold uppercase tracking-wide text-[#536975]">
+                <h2 className="text-xs font-bold uppercase tracking-wide text-ink-2">
                   {t("auth.vaultAccountsTitle")}
                 </h2>
                 {vaultUsers.length === 0 ? (
-                  <p className="mt-1 text-xs text-[#536975]">
+                  <p className="mt-1 text-xs text-ink-2">
                     {t("auth.noVaultAccounts")}
                   </p>
                 ) : (
@@ -427,9 +434,9 @@ export default function LoginPage() {
                         key={v.email}
                         type="button"
                         onClick={() => setPinEmail(v.email)}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#DCE6E9] bg-[#F3F7F8] px-2.5 py-1 text-xs font-medium text-[#405663] hover:bg-[#EDF3F5]"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-canvas px-2.5 py-1 text-xs font-medium text-ink-2 hover:bg-fill"
                       >
-                        <UserCheck aria-hidden="true" className="h-3.5 w-3.5 text-[#0F766E]" />
+                        <UserCheck aria-hidden="true" className="h-3.5 w-3.5 text-brand-ink" />
                         <span>
                           {v.email} ({v.role})
                         </span>
@@ -449,13 +456,13 @@ export default function LoginPage() {
           <div className="flex items-start gap-2.5">
             <ShieldCheck
               aria-hidden="true"
-              className="mt-0.5 h-5 w-5 shrink-0 text-[#0F766E]"
+              className="mt-0.5 h-5 w-5 shrink-0 text-brand-ink"
             />
             <div className="min-w-0">
-              <h2 className="text-base font-bold text-[#172A33]">
+              <h2 className="text-base font-bold text-ink">
                 {t("auth.quickFillTitle")}
               </h2>
-              <p className="mt-0.5 text-xs text-[#536975]">
+              <p className="mt-0.5 text-xs text-ink-2">
                 {t("auth.quickFillSubtitle")}
               </p>
             </div>
@@ -468,17 +475,22 @@ export default function LoginPage() {
                 type="button"
                 disabled={submitting}
                 onClick={() => handleQuickFill(account)}
-                className="flex w-full items-center justify-between gap-2 rounded-lg border border-[#DCE6E9] bg-[#F3F7F8] px-3.5 py-2.5 text-left transition-colors hover:border-[#0F766E]/50 hover:bg-[#F0FDFA] disabled:opacity-60"
+                className={`flex w-full items-center justify-between gap-2 rounded-lg border px-3.5 py-2.5 text-left transition-colors hover:border-brand/50 hover:bg-brand-soft disabled:opacity-60 ${account.role === "admin" ? "border-brand/45 bg-brand-soft/50 shadow-sm" : "border-line bg-canvas"}`}
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[#172A33]">
+                  <p className="truncate text-sm font-semibold text-ink">
                     {t(account.labelKey)}
                   </p>
-                  <p className="truncate text-xs text-[#536975]">
+                  {account.role === "admin" && (
+                    <p className="mt-0.5 text-[11px] font-semibold leading-tight text-brand-ink">
+                      {t("auth.judgeRecommendation")}
+                    </p>
+                  )}
+                  <p className="truncate text-xs text-ink-2">
                     {account.email} · {account.clinic}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-md bg-[#0F766E] px-2.5 py-1 text-xs font-semibold text-white">
+                <span className="shrink-0 rounded-md bg-brand px-2.5 py-1 text-xs font-semibold text-white">
                   {account.role.toUpperCase()}
                 </span>
               </button>

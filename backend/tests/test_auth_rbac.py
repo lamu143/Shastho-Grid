@@ -797,6 +797,7 @@ async def test_rate_limit_enforced_via_real_redis(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(settings, "RATE_LIMIT_REQUESTS", 3)
+    monkeypatch.setattr(settings, "RATE_LIMIT_SENSITIVE_REQUESTS", 3)
     monkeypatch.setattr(settings, "RATE_LIMIT_WINDOW_SECONDS", 60)
 
     for _ in range(3):

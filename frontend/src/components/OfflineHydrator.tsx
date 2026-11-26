@@ -4,6 +4,10 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "@/lib/authContext";
 import { bootstrapClinicState } from "@/lib/syncEngine";
 
+// Only antibiotic-stewardship roles work from the offline clinic cache. Critical-care roles
+// (dispatcher, hospital_admin, blood_bank_officer) are not allowed to read it (403).
+const STEWARDSHIP_ROLES = new Set(["dispenser", "pharmacist", "auditor", "admin"]);
+
 export function OfflineHydrator() {
   const { user, token, isOfflineSession } = useAuth();
   const hydratedKeyRef = useRef<string | null>(null);
@@ -11,6 +15,7 @@ export function OfflineHydrator() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!user || !token || isOfflineSession) return;
+    if (!STEWARDSHIP_ROLES.has(user.role)) return;
     if (!window.navigator.onLine) return;
 
     const sessionKey = `${user.id}:${user.clinic_id}`;

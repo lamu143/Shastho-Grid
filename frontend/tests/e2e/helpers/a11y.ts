@@ -7,14 +7,16 @@ export async function runCriticalAxeAudit(
   routeLabel: string
 ): Promise<void> {
   const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
 
-  const critical = results.violations.filter((v) => v.impact === "critical");
+  const blocking = results.violations.filter(
+    (v) => v.impact === "critical" || v.impact === "serious"
+  );
   expect(
-    critical,
-    `Critical Axe violations on ${routeLabel}: ${JSON.stringify(
-      critical.map((v) => ({ id: v.id, help: v.help, nodes: v.nodes.length }))
+    blocking,
+    `Critical/Serious Axe violations on ${routeLabel}: ${JSON.stringify(
+      blocking.map((v) => ({ id: v.id, impact: v.impact, help: v.help, nodes: v.nodes.length }))
     )}`
   ).toHaveLength(0);
 }

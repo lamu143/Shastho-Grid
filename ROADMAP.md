@@ -22,6 +22,7 @@ Offline-first sync (SyncSafe) stays as a bonus capability and is not declared, s
 | StewardLens | Access-ratio KPI, staffed-vs-idle ICU, blood scarcity analytics | M05 |
 | SyncSafe | Offline queue + safe conflict merge | Bonus |
 | Shastho Copilot | Bangla/English intake that only calls solver tools; human sign-off | AI |
+| CareRadar | 3D Satellite & Street map (`/radar`) with live OSM + OSRM routing | UX |
 
 The single source of truth for these names is [frontend/src/lib/brand.ts](frontend/src/lib/brand.ts).
 
@@ -65,17 +66,41 @@ The single source of truth for these names is [frontend/src/lib/brand.ts](fronte
 - [x] Guards: identifier scrubbing + prompt-injection block (reused from `steward_agent.py`); numbers the model returns must literally appear in the note; missing vitals are reported, never defaulted; brief is templated from tool output only; always `requires_human_approval`
 - [x] Tests: 10-note golden set, end-to-end with no keys, mocked hallucination, PII, injection, roles. `conftest.py` blanks real AI keys so tests never call providers
 
+### M5.5: Real capacity data (DGHS has no public feed)
+- [x] Provenance on every count: `data_source` (SEED_DEMO / STAFF / FEED) plus `reported_at`
+- [x] Per-facility feed keys (SHA-256 hashed, shown once, revocable, facility-scoped) and `POST /feed/v1/capacity`
+- [x] Feed subtracts ShasthoGrid's pending holds; out-of-order reports skipped; LockStep lock order; audited
+- [x] Freshness LIVE / STALE / DEMO in `/facilities`; CareMatch penalises stale data and returns `stale_facilities`
+- [x] Dispatch UI freshness chip + panel + stale warning; integration guide in `docs/hospital-feed.md`
+- [x] FacilityDesk (`/facility`): bed/vent and blood steppers with optimistic versioning, incoming-hold queue (confirm / arrived / release, 20 s polling), feed-key issue/revoke with one-time reveal + curl example; officers land here after login
+- [x] Blood-bank officers see (read-only) holds that draw on their stock
+- [x] Map labels avoid collisions near Farmgate
+
 ### M6: Product UI redesign
-- [ ] `/dispatch` CareMatch workbench: vitals, live PulseScore badge, presets, ConflictProof banner, 3 repair cards, MapLibre dual routes, approve & lock
-- [ ] `/race-lab`: 5×5 live grid, KPI counters, idempotency replay inspector
-- [ ] StewardLens charts (Access ratio, staffed vs idle ICU, blood scarcity heatmap)
-- [ ] Admin: facility-scoped stock steppers, hold queue, cross-facility 403 demo, audit explorer
+- [x] `/dispatch` CareMatch workbench: vitals, live PulseScore badge, presets, ConflictProof banner, repair cards, MapLibre dual routes, approve & lock
+- [x] `/race-lab`: 5×5 live grid, KPI counters, timing telemetry, idempotency replay inspector
+- [x] `/radar`: CareRadar 3D hospital, pharmacy, and blood-bank finder with OSRM routing
+- [x] StewardLens critical-care (`/insights`): ICU occupied/free/unstaffed bars with table view, blood heatmap with expiry flags, hold outcomes, freshness, and Lakehouse NDJSON export
+- [x] Facility-scoped stock steppers + hold queue (FacilityDesk); cross-facility 403s audited
+- [x] Clinical rule provenance (`source_document`, `rule_version`, `effective_date`, `review_status`) and evidence card methodology/population traceability
+- [ ] Audit explorer UI
 - [ ] Settings: dependency health + simulate OSRM/AI outage
-- [ ] Login: one-click demo role cards for all roles
-- [ ] Consistent motion, skeletons, empty and error states; axe check passes at 390 px and 1440 px
+- [x] Login: one-click demo role cards for all roles
+- [x] WCAG 2.2 AA review fixed (contrast, focus, live regions, language of parts, non-colour map encoding); verified clean at 390 px and 1440 px
+- [ ] Automated axe run in Playwright across the new pages
+
+### Security hardening (review findings)
+- [x] Trusted-proxy-aware rate limiting + strict bucket on login/PIN/feed; trace-id validation; fail-closed JWT secret
+- [x] Explicit Redis unavailability behavior (`RATE_LIMIT_FAIL_CLOSED_ON_SENSITIVE`, `X-RateLimit-Status: degraded`) and production demo gate (`ALLOW_DEMO_DATA_IN_PRODUCTION`)
+- [x] Cross-clinic isolation for `admin`/`auditor` across `GET /carematch/{id}`, `GET/POST /reservations`, and `GET /copilot/sessions/{id}`
+- [x] RaceLab reset releases stock + audits; sandbox cannot hold blood; expired holds cancellable
+- [x] Feed: holds read after locks, role-scoped keys, newer-report-wins, inactive-facility keys rejected
+- [x] Transition: 404 for invisible reservations, denied attempts audited; Copilot guard covers zeros and safety flags
 
 ### M7: Ship
-- [ ] Add the missing `frontend/Dockerfile`; Render backend (`--workers 1`), Vercel frontend with a `/api/v1` rewrite, Neon + Upstash
-- [ ] Set `NEXT_PUBLIC_SITE_URL` to the real domain; cron keep-alive on `/healthz`
-- [ ] README with architecture, rubric mapping, demo credentials and a note that the data is simulated
+- [x] `frontend/Dockerfile` (built and smoke-tested); compose passes build args
+- [x] GitHub Actions CI (`.github/workflows/ci.yml`) and operations runbook (`docs/operations.md`)
+- [ ] Render backend (`--workers 1`), Vercel frontend, Neon + Upstash (needs your accounts)
+- [ ] Set `NEXT_PUBLIC_SITE_URL` to the real domain; cron keep-alive on `/health`
+- [x] README with architecture, rubric mapping, demo credentials and data-honesty note
 - [ ] 5-minute demo video following the blueprint scripts

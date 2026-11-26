@@ -498,6 +498,8 @@ def _run_pass1_optimization(
     model.minimize(sum(objective_terms))
 
     solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = 2.0
+    solver.parameters.num_workers = 1
     status = solver.solve(model)
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         return None
@@ -635,6 +637,7 @@ def _run_pass2_mus(
     solver = cp_model.CpSolver()
     solver.parameters.cp_model_presolve = False
     solver.parameters.num_workers = 1
+    solver.parameters.max_time_in_seconds = 2.0
 
     status = solver.solve(model)
     if status != cp_model.INFEASIBLE:

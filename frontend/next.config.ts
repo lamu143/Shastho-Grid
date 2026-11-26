@@ -24,6 +24,12 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
+  // Serwist's service worker is disabled in development; this empty config
+  // declares that the app intentionally uses Next 16's default Turbopack.
+  turbopack: {},
+  experimental: {
+    optimizePackageImports: ["lucide-react", "framer-motion"],
+  },
   async headers() {
     return [
       {

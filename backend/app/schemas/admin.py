@@ -69,6 +69,10 @@ class GuidelineOut(BaseModel):
     default_duration_days: int
     guidance_en: str
     guidance_bn: str
+    source_document: str = "WHO AWaRe Antibiotic Book / DGHS Bangladesh"
+    rule_version: str = "2026.1-demo"
+    effective_date: str = "2026-01-01"
+    review_status: str = "PENDING_CLINICAL_REVIEW"
 
 
 class AntibioticCatalogOut(BaseModel):

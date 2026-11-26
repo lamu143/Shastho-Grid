@@ -217,10 +217,10 @@ function SyncContent({ user }: { user: SessionUser }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight text-[#172A33] sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
             {t("sync.title")}
           </h1>
-          <p className="text-sm text-[#536975]">{t("sync.subtitle")}</p>
+          <p className="text-sm text-ink-2">{t("sync.subtitle")}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -228,9 +228,9 @@ function SyncContent({ user }: { user: SessionUser }) {
             type="button"
             disabled={hydrating}
             onClick={handleHydrate}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-[#DCE6E9] bg-[#FFFFFF] px-3.5 py-2 text-xs font-semibold text-[#172A33] hover:bg-[#EDF3F5] disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-ink hover:bg-fill disabled:opacity-60"
           >
-            <RefreshCw aria-hidden="true" className="h-3.5 w-3.5 text-[#0F766E]" />
+            <RefreshCw aria-hidden="true" className="h-3.5 w-3.5 text-brand-ink" />
             <span>{t("sync.hydrateBtn")}</span>
           </button>
 
@@ -239,7 +239,7 @@ function SyncContent({ user }: { user: SessionUser }) {
               type="button"
               disabled={syncing}
               onClick={handleSyncNow}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#115E59] disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-xs font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
             >
               <RefreshCw
                 aria-hidden="true"
@@ -254,7 +254,7 @@ function SyncContent({ user }: { user: SessionUser }) {
       {isReadOnlyAuditor && (
         <div
           role="status"
-          className="rounded-lg border border-[#0284C7]/40 bg-[#E0F2FE] px-4 py-2.5 text-xs font-semibold text-[#075985]"
+          className="rounded-lg border border-info/40 bg-info-soft px-4 py-2.5 text-xs font-semibold text-info-ink"
         >
           {t("common.readOnlyAuditor")}
         </div>
@@ -263,7 +263,7 @@ function SyncContent({ user }: { user: SessionUser }) {
       {errorMsg && (
         <div
           role="alert"
-          className="rounded-lg border border-[#DC2626]/40 bg-[#FEE2E2] px-4 py-3 text-sm font-medium text-[#991B1B]"
+          className="rounded-lg border border-danger/40 bg-danger-soft px-4 py-3 text-sm font-medium text-danger-ink"
         >
           {errorMsg}
         </div>
@@ -272,7 +272,7 @@ function SyncContent({ user }: { user: SessionUser }) {
       {lastSummary && (
         <div
           role="status"
-          className="rounded-lg border border-[#059669]/40 bg-[#ECFDF5] px-4 py-2.5 text-xs font-semibold text-[#065F46]"
+          className="rounded-lg border border-success/40 bg-success-soft px-4 py-2.5 text-xs font-semibold text-success-ink"
         >
           Synced: {lastSummary.syncedCount} · Conflicts: {lastSummary.conflictCount} ·
           Failed: {lastSummary.failedCount} · Remaining: {lastSummary.remainingPending}
@@ -284,26 +284,26 @@ function SyncContent({ user }: { user: SessionUser }) {
         className="grid grid-cols-1 gap-4 sm:grid-cols-3"
       >
         <div className="mac-card p-4">
-          <p className="text-xs font-semibold text-[#536975]">
+          <p className="text-xs font-semibold text-ink-2">
             {t("sync.summaryPending")}
           </p>
-          <p className="mt-1 text-2xl font-bold text-[#172A33]">{pendingCount}</p>
+          <p className="mt-1 text-2xl font-bold text-ink">{pendingCount}</p>
         </div>
 
         <div className="mac-card p-4">
-          <p className="text-xs font-semibold text-[#536975]">
+          <p className="text-xs font-semibold text-ink-2">
             {t("sync.summaryOpenConflicts")}
           </p>
-          <p className="mt-1 text-2xl font-bold text-[#991B1B]">
+          <p className="mt-1 text-2xl font-bold text-danger-ink">
             {openConflicts.length}
           </p>
         </div>
 
         <div className="mac-card p-4">
-          <p className="text-xs font-semibold text-[#536975]">
+          <p className="text-xs font-semibold text-ink-2">
             {t("sync.summaryTotalMutations")}
           </p>
-          <p className="mt-1 text-2xl font-bold text-[#172A33]">
+          <p className="mt-1 text-2xl font-bold text-ink">
             {mutations.length}
           </p>
         </div>
@@ -314,15 +314,15 @@ function SyncContent({ user }: { user: SessionUser }) {
         className="space-y-4 mac-card p-5"
       >
         <div className="flex items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 text-base font-bold text-[#172A33]">
-            <AlertTriangle aria-hidden="true" className="h-4 w-4 text-[#DC2626]" />
+          <h2 className="flex items-center gap-2 text-base font-bold text-ink">
+            <AlertTriangle aria-hidden="true" className="h-4 w-4 text-danger-ink" />
             <span>{t("sync.workbenchTitle")}</span>
           </h2>
           {openConflicts.length > 0 && <StatusBadge variant="OPEN" />}
         </div>
 
         {openConflicts.length === 0 ? (
-          <p className="py-4 text-sm text-[#536975]">{t("sync.noConflicts")}</p>
+          <p className="py-4 text-sm text-ink-2">{t("sync.noConflicts")}</p>
         ) : (
           <div className="space-y-6">
             {openConflicts.map((c) => {
@@ -342,14 +342,14 @@ function SyncContent({ user }: { user: SessionUser }) {
               return (
                 <article
                   key={c.id}
-                  className="space-y-4 rounded-xl border border-[#DC2626]/35 bg-[#FFFBFB] p-4"
+                  className="space-y-4 rounded-xl border border-danger/35 bg-danger-soft p-4"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#DCE6E9] pb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-[#172A33]">
+                      <p className="text-sm font-bold text-ink">
                         {c.entity_type} · {c.entity_id}
                       </p>
-                      <p className="text-xs text-[#536975]">
+                      <p className="text-xs text-ink-2">
                         Conflict ID: {c.id}
                       </p>
                     </div>
@@ -357,8 +357,8 @@ function SyncContent({ user }: { user: SessionUser }) {
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <div className="min-w-0 rounded-lg border border-[#0284C7]/35 bg-[#F0F9FF] p-3.5">
-                      <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[#075985]">
+                    <div className="min-w-0 rounded-lg border border-info/35 bg-info-soft p-3.5">
+                      <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-info-ink">
                         <Server aria-hidden="true" className="h-3.5 w-3.5" />
                         <span>{t("sync.serverSnapshot")}</span>
                       </h3>
@@ -367,12 +367,12 @@ function SyncContent({ user }: { user: SessionUser }) {
                           ([k, val]) => (
                             <div
                               key={k}
-                              className="flex justify-between gap-2 border-b border-[#BAE6FD]/60 py-1"
+                              className="flex justify-between gap-2 border-b border-info/60 py-1"
                             >
-                              <dt className="font-semibold text-[#172A33]">
+                              <dt className="font-semibold text-ink">
                                 {k}
                               </dt>
-                              <dd className="break-all text-right text-[#405663]">
+                              <dd className="break-all text-right text-ink-2">
                                 {val}
                               </dd>
                             </div>
@@ -381,8 +381,8 @@ function SyncContent({ user }: { user: SessionUser }) {
                       </dl>
                     </div>
 
-                    <div className="min-w-0 rounded-lg border border-[#D97706]/45 bg-[#FFFBEB] p-3.5">
-                      <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[#92400E]">
+                    <div className="min-w-0 rounded-lg border border-warn/45 bg-warn-soft p-3.5">
+                      <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-warn-ink">
                         <Smartphone aria-hidden="true" className="h-3.5 w-3.5" />
                         <span>{t("sync.clientSnapshot")}</span>
                       </h3>
@@ -391,12 +391,12 @@ function SyncContent({ user }: { user: SessionUser }) {
                           ([k, val]) => (
                             <div
                               key={k}
-                              className="flex justify-between gap-2 border-b border-[#FDE68A]/70 py-1"
+                              className="flex justify-between gap-2 border-b border-warn/70 py-1"
                             >
-                              <dt className="font-semibold text-[#172A33]">
+                              <dt className="font-semibold text-ink">
                                 {k}
                               </dt>
-                              <dd className="break-all text-right text-[#405663]">
+                              <dd className="break-all text-right text-ink-2">
                                 {val}
                               </dd>
                             </div>
@@ -406,12 +406,12 @@ function SyncContent({ user }: { user: SessionUser }) {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-[#DC2626]/35 bg-[#FEE2E2]/55 p-3.5">
-                    <h3 className="text-xs font-bold uppercase tracking-wide text-[#991B1B]">
+                  <div className="rounded-lg border border-danger/35 bg-danger-soft/55 p-3.5">
+                    <h3 className="text-xs font-bold uppercase tracking-wide text-danger-ink">
                       {t("sync.cpsatVerdict")}: {solverStatus}
                     </h3>
                     {musConflicts.length > 0 && (
-                      <ul className="mt-2 space-y-1 text-xs text-[#7F1D1D]">
+                      <ul className="mt-2 space-y-1 text-xs text-danger-ink">
                         {musConflicts.map((m, idx) => (
                           <li key={idx}>
                             <strong>
@@ -424,7 +424,7 @@ function SyncContent({ user }: { user: SessionUser }) {
                       </ul>
                     )}
                     {safeRelaxations.length > 0 && (
-                      <ul className="mt-2 space-y-1 border-t border-[#FECACA] pt-2 text-xs text-[#78350F]">
+                      <ul className="mt-2 space-y-1 border-t border-danger-line pt-2 text-xs text-warn-ink">
                         {safeRelaxations.map((rel, idx) => (
                           <li key={idx}>
                             <strong>{String(rel.action ?? "")}</strong>:{" "}
@@ -439,7 +439,7 @@ function SyncContent({ user }: { user: SessionUser }) {
                     <div className="min-w-0">
                       <label
                         htmlFor={`merged-allergies-${c.id}`}
-                        className="block text-xs font-semibold text-[#405663]"
+                        className="block text-xs font-semibold text-ink-2"
                       >
                         {t("sync.mergedAllergiesLabel")}
                       </label>
@@ -454,14 +454,14 @@ function SyncContent({ user }: { user: SessionUser }) {
                             [c.id]: e.target.value,
                           }))
                         }
-                        className="mt-1 w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-xs text-[#172A33] disabled:bg-[#EDF3F5]"
+                        className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs text-ink disabled:bg-fill"
                       />
                     </div>
 
                     <div className="min-w-0">
                       <label
                         htmlFor={`conflict-notes-${c.id}`}
-                        className="block text-xs font-semibold text-[#405663]"
+                        className="block text-xs font-semibold text-ink-2"
                       >
                         {t("sync.resolutionNotesLabel")}
                       </label>
@@ -477,7 +477,7 @@ function SyncContent({ user }: { user: SessionUser }) {
                           }))
                         }
                         placeholder={t("sync.resolutionNotesPlaceholder")}
-                        className="mt-1 w-full rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3 py-2 text-xs text-[#172A33] placeholder:text-[#5C727E] disabled:bg-[#EDF3F5]"
+                        className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs text-ink placeholder:text-ink-3 disabled:bg-fill"
                       />
                     </div>
                   </div>
@@ -488,7 +488,7 @@ function SyncContent({ user }: { user: SessionUser }) {
                         type="button"
                         disabled={isBusy}
                         onClick={() => handleResolve(c, "RESOLVED_MERGED")}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#115E59] disabled:opacity-60"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-xs font-semibold text-white hover:bg-brand-strong disabled:opacity-60"
                       >
                         <GitMerge aria-hidden="true" className="h-3.5 w-3.5" />
                         <span>{t("sync.resolveMergedBtn")}</span>
@@ -497,7 +497,7 @@ function SyncContent({ user }: { user: SessionUser }) {
                         type="button"
                         disabled={isBusy}
                         onClick={() => handleResolve(c, "RESOLVED_SERVER")}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#0284C7]/45 bg-[#E0F2FE] px-3.5 py-2 text-xs font-semibold text-[#075985] hover:bg-[#BAE6FD] disabled:opacity-60"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-info/45 bg-info-soft px-3.5 py-2 text-xs font-semibold text-info-ink hover:bg-info-soft disabled:opacity-60"
                       >
                         <CheckCircle2 aria-hidden="true" className="h-3.5 w-3.5" />
                         <span>{t("sync.resolveServerBtn")}</span>
@@ -506,7 +506,7 @@ function SyncContent({ user }: { user: SessionUser }) {
                         type="button"
                         disabled={isBusy}
                         onClick={() => handleResolve(c, "RESOLVED_CLIENT")}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#D1DEE3] bg-[#FFFFFF] px-3.5 py-2 text-xs font-semibold text-[#405663] hover:bg-[#EDF3F5] disabled:opacity-60"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-ink-2 hover:bg-fill disabled:opacity-60"
                       >
                         <span>{t("sync.resolveClientBtn")}</span>
                       </button>
@@ -519,17 +519,17 @@ function SyncContent({ user }: { user: SessionUser }) {
         )}
 
         {resolvedConflicts.length > 0 && (
-          <div className="border-t border-[#DCE6E9] pt-4">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-[#536975]">
+          <div className="border-t border-line pt-4">
+            <h3 className="text-xs font-bold uppercase tracking-wide text-ink-2">
               Resolved Conflicts ({resolvedConflicts.length})
             </h3>
             <ul className="mt-2 space-y-2 text-xs">
               {resolvedConflicts.map((rc) => (
                 <li
                   key={rc.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#DCE6E9] bg-[#F3F7F8] px-3 py-2"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line bg-canvas px-3 py-2"
                 >
-                  <span className="font-medium text-[#172A33]">
+                  <span className="font-medium text-ink">
                     {rc.entity_type} · {rc.entity_id} — {rc.resolution_notes ?? ""}
                   </span>
                   <StatusBadge variant={rc.status} />
@@ -544,17 +544,17 @@ function SyncContent({ user }: { user: SessionUser }) {
         aria-label={t("sync.queueTitle")}
         className="mac-card p-5"
       >
-        <h2 className="text-base font-bold text-[#172A33]">
+        <h2 className="text-base font-bold text-ink">
           {t("sync.queueTitle")}
         </h2>
 
         <div className="mt-4 overflow-x-auto">
           {mutations.length === 0 ? (
-            <p className="py-4 text-sm text-[#536975]">{t("sync.emptyQueue")}</p>
+            <p className="py-4 text-sm text-ink-2">{t("sync.emptyQueue")}</p>
           ) : (
             <table className="w-full min-w-[680px] border-collapse text-left text-xs">
               <thead>
-                <tr className="border-b border-[#DCE6E9] bg-[#F3F7F8] text-[#405663]">
+                <tr className="border-b border-line bg-canvas text-ink-2">
                   <th scope="col" className="px-3 py-2.5 font-semibold">
                     {t("sync.colEntity")}
                   </th>
@@ -574,14 +574,14 @@ function SyncContent({ user }: { user: SessionUser }) {
               </thead>
               <tbody className="divide-y divide-[#DCE6E9]">
                 {mutations.map((m) => (
-                  <tr key={m.id} className="hover:bg-[#F3F7F8]">
-                    <td className="px-3 py-2.5 font-medium text-[#172A33]">
+                  <tr key={m.id} className="hover:bg-canvas">
+                    <td className="px-3 py-2.5 font-medium text-ink">
                       {m.entity_type} · {m.entity_id.slice(0, 8)}
                     </td>
-                    <td className="px-3 py-2.5 text-[#405663]">
+                    <td className="px-3 py-2.5 text-ink-2">
                       {m.mutation_type}
                     </td>
-                    <td className="px-3 py-2.5 text-[#405663]">
+                    <td className="px-3 py-2.5 text-ink-2">
                       v{m.base_version}
                     </td>
                     <td className="px-3 py-2.5">
@@ -590,12 +590,12 @@ function SyncContent({ user }: { user: SessionUser }) {
                       ) : m.status === "synced" ? (
                         <StatusBadge variant="SYNCED" />
                       ) : (
-                        <span className="inline-flex rounded-full border border-[#D97706]/50 bg-[#FEF3C7] px-2.5 py-0.5 text-xs font-semibold text-[#92400E]">
+                        <span className="inline-flex rounded-full border border-warn/50 bg-warn-soft px-2.5 py-0.5 text-xs font-semibold text-warn-ink">
                           {m.status.toUpperCase()}
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-2.5 text-[#536975]">
+                    <td className="px-3 py-2.5 text-ink-2">
                       {m.last_error ?? "-"}
                     </td>
                   </tr>

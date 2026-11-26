@@ -8,6 +8,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.copilot import (
@@ -19,7 +20,7 @@ from app.agents.copilot import (
 from app.agents.steward_agent import check_prompt_injection, strip_pii_from_text
 from app.core.errors import AppError, NotFoundError, get_trace_id
 from app.core.security import CurrentUser, get_current_user, require_roles
-from app.db.models import AgentSession, AuditLog
+from app.db.models import AgentSession, AuditLog, User
 from app.db.session import get_db
 from app.routers.critical_care import execute_carematch
 from app.schemas.critical_care import CareMatchIn, News2In
@@ -62,7 +63,8 @@ async def triage_assist(
     user: Annotated[CurrentUser, Depends(require_roles("dispatcher", "admin"))],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, Any]:
-    safe, guard = await check_prompt_injection(payload.note)
+    redacted_note = strip_pii_from_text(payload.note)
+    safe, guard = await check_prompt_injection(redacted_note)
     if not safe:
         raise AppError(
             422,
@@ -74,7 +76,7 @@ async def triage_assist(
     trace: list[ToolStep] = []
 
     t = time.perf_counter()
-    outcome = await extract_intake(payload.note)
+    outcome = await extract_intake(redacted_note)
     ex = outcome.extraction
     missing = ex.missing_vitals()
     _step(
@@ -189,7 +191,15 @@ async def get_session(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> dict[str, Any]:
     session = await db.get(AgentSession, session_id)
-    if session is None or (user.role not in ("admin", "auditor") and session.user_id != user.id):
+    if session is None:
+        raise NotFoundError("Copilot session not found.", error_code="COPILOT_SESSION_NOT_FOUND")
+    if user.role in ("admin", "auditor"):
+        creator_clinic_id = (
+            await db.execute(select(User.clinic_id).where(User.id == session.user_id))
+        ).scalar_one_or_none()
+        if creator_clinic_id != user.clinic_id:
+            raise NotFoundError("Copilot session not found.", error_code="COPILOT_SESSION_NOT_FOUND")
+    elif session.user_id != user.id:
         raise NotFoundError("Copilot session not found.", error_code="COPILOT_SESSION_NOT_FOUND")
     return {
         "session_id": str(session.id),

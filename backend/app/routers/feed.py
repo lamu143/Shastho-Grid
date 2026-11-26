@@ -15,9 +15,10 @@ each sorted by id.
 from __future__ import annotations
 
 import hashlib
+import logging
 import secrets
 from datetime import date, datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Request
@@ -32,6 +33,7 @@ from app.db.session import get_db
 from app.schemas.critical_care import BloodGroup, ResourceType
 
 router = APIRouter(tags=["feed"])
+logger = logging.getLogger(__name__)
 
 KEY_PREFIX = "sgf_"
 # Statuses whose bed / ventilator is still occupied by a ShasthoGrid hold.
@@ -47,9 +49,20 @@ def hash_key(plaintext: str) -> str:
 # --------------------------------------------------------------------------- schemas
 
 
+FeedScope = Literal["RESOURCES", "BLOOD", "ALL"]
+# What each role may let a machine write on its behalf (mirrors the staff PATCH roles).
+ROLE_SCOPES: dict[str, set[str]] = {
+    "hospital_admin": {"RESOURCES"},
+    "blood_bank_officer": {"BLOOD"},
+    "admin": {"RESOURCES", "BLOOD", "ALL"},
+}
+DEFAULT_SCOPE = {"hospital_admin": "RESOURCES", "blood_bank_officer": "BLOOD", "admin": "ALL"}
+
+
 class FeedKeyCreateIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     label: str = Field(min_length=2, max_length=80)
+    scope: FeedScope | None = None
 
 
 class FeedKeyOut(BaseModel):
@@ -57,6 +70,7 @@ class FeedKeyOut(BaseModel):
     id: UUID
     facility_id: UUID
     label: str
+    scope: str = "ALL"
     key_prefix: str
     created_at: datetime
     last_used_at: datetime | None
@@ -170,10 +184,18 @@ async def create_feed_key(
 ) -> FeedKeyCreatedOut:
     await _scoped(db, request, user, facility_id, "FEED_KEY_CREATE")
     facility = await _facility_or_404(db, facility_id)
+    scope = payload.scope or DEFAULT_SCOPE[user.role]
+    if scope not in ROLE_SCOPES[user.role]:
+        raise AppError(
+            status_code=403,
+            error_code="FEED_SCOPE_FORBIDDEN",
+            message=f"Your role can only issue {DEFAULT_SCOPE[user.role]} feed keys.",
+        )
     plaintext = KEY_PREFIX + secrets.token_urlsafe(32)
     key = FacilityFeedKey(
         facility_id=facility.id,
         label=payload.label.strip(),
+        scope=scope,
         key_prefix=plaintext[:12],
         key_hash=hash_key(plaintext),
         created_by_user_id=user.id,
@@ -181,7 +203,7 @@ async def create_feed_key(
     )
     db.add(key)
     await db.flush()
-    db.add(_audit(user, request, "FEED_KEY_CREATE", str(key.id), {"facility_id": str(facility.id), "label": key.label}))
+    db.add(_audit(user, request, "FEED_KEY_CREATE", str(key.id), {"facility_id": str(facility.id), "label": key.label, "scope": scope}))
     await db.commit()
     await db.refresh(key)
     return FeedKeyCreatedOut(**FeedKeyOut.model_validate(key).model_dump(), api_key=plaintext)
@@ -240,16 +262,31 @@ async def push_capacity(
     db: Annotated[AsyncSession, Depends(get_db)],
     x_facility_key: Annotated[str | None, Header(alias="X-Facility-Key")] = None,
 ) -> CapacityReportOut:
+    def reject(reason: str) -> AppError:
+        peer = request.client.host if request.client else "unknown"
+        logger.warning("feed key rejected: %s peer=%s trace=%s", reason, peer, get_trace_id(request))
+        return _invalid_key()
+
     if not x_facility_key or not x_facility_key.startswith(KEY_PREFIX) or len(x_facility_key) > 128:
-        raise _invalid_key()
+        raise reject("malformed")
     key = (
         await db.execute(
             select(FacilityFeedKey).where(FacilityFeedKey.key_hash == hash_key(x_facility_key)).with_for_update()
         )
     ).scalar_one_or_none()
-    if key is None or key.revoked_at is not None:
-        raise _invalid_key()
-    facility = await _facility_or_404(db, key.facility_id)
+    if key is None:
+        raise reject("unknown")
+    if key.revoked_at is not None:
+        raise reject(f"revoked prefix={key.key_prefix}")
+    facility = await db.get(Facility, key.facility_id)
+    if facility is None or not facility.is_active:
+        raise reject(f"inactive facility prefix={key.key_prefix}")
+    if payload.resources and key.scope not in ("RESOURCES", "ALL"):
+        raise AppError(status_code=403, error_code="FEED_SCOPE_VIOLATION",
+                       message="This key may only report blood stock.")
+    if payload.blood and key.scope not in ("BLOOD", "ALL"):
+        raise AppError(status_code=403, error_code="FEED_SCOPE_VIOLATION",
+                       message="This key may only report beds and ventilators.")
 
     now = datetime.now(timezone.utc)
     reported_at = payload.reported_at or now
@@ -260,17 +297,7 @@ async def push_capacity(
     if reported_at < now - MAX_REPORT_AGE:
         raise ValidationAppError("reported_at is older than 24 hours.", error_code="FEED_TIMESTAMP_TOO_OLD")
 
-    # ---- Lock 1: pending reservations at this hospital, sorted by id --------------
-    pending = (
-        await db.execute(
-            select(Reservation)
-            .where(Reservation.hospital_id == facility.id, Reservation.status.in_(PENDING_STATUSES))
-            .order_by(Reservation.id)
-            .with_for_update()
-        )
-    ).scalars().all()
-
-    # ---- Lock 2: hospital_resources, sorted by id --------------------------------
+    # ---- Lock 1: hospital_resources, sorted by id --------------------------------
     wanted_types = [r.resource_type for r in payload.resources]
     resources = (
         await db.execute(
@@ -281,7 +308,7 @@ async def push_capacity(
         )
     ).scalars().all() if wanted_types else []
 
-    # ---- Lock 3: blood_inventories, sorted by id ---------------------------------
+    # ---- Lock 2: blood_inventories, sorted by id ---------------------------------
     wanted_groups = [b.blood_type for b in payload.blood]
     blood_rows = (
         await db.execute(
@@ -292,12 +319,23 @@ async def push_capacity(
         )
     ).scalars().all() if wanted_groups else []
 
+    # Read pending holds only now: every hold creator/releaser takes the resource lock we
+    # hold, so this count cannot change under us (reading earlier would miss a new hold).
+    pending = (
+        await db.execute(
+            select(Reservation).where(
+                Reservation.hospital_id == facility.id, Reservation.status.in_(PENDING_STATUSES)
+            )
+        )
+    ).scalars().all() if resources else []
+
     by_type = {r.resource_type: r for r in resources}
     by_group = {b.blood_type: b for b in blood_rows}
     applied: list[AppliedRow] = []
 
     def is_older(row) -> bool:
-        return row.data_source == "FEED" and row.reported_at is not None and reported_at < row.reported_at
+        # Any newer report wins, whether it came from staff or the feed.
+        return row.reported_at is not None and reported_at < row.reported_at
 
     for item in payload.resources:
         row = by_type.get(item.resource_type)

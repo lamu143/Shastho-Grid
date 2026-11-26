@@ -182,12 +182,13 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
         trace_id = get_trace_id(request)
+        sanitized = [{k: v for k, v in err.items() if k != "input"} for err in exc.errors()]
         return JSONResponse(
             status_code=422,
             content=build_error_payload(
                 error_code="VALIDATION_ERROR",
                 message="Request validation failed.",
-                details={"errors": jsonable_encoder(exc.errors())},
+                details={"errors": jsonable_encoder(sanitized)},
                 trace_id=trace_id,
             ),
             headers={"X-Trace-Id": trace_id},

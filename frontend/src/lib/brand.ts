@@ -46,7 +46,9 @@ export type FeatureId =
   | "syncsafe"
   | "stewardlens"
   | "copilot"
-  | "racelab";
+  | "racelab"
+  | "facilitydesk"
+  | "careradar";
 
 export interface Feature {
   id: FeatureId;
@@ -66,7 +68,7 @@ export const FEATURES: Feature[] = [
     accent: "#059669",
     summary: {
       en: "CP-SAT antibiotic regimen optimizer: Access-first, allergy, pregnancy, renal, age and live stock constraints solved together.",
-      bn: "CP-SAT অ্যান্টিবায়োটিক রেজিমেন অপটিমাইজার: অ্যাক্সেস-প্রথম, অ্যালার্জি, গর্ভাবস্থা, কিডনি, বয়স ও মজুত একসাথে যাচাই।",
+      bn: "CP-SAT দিয়ে অ্যান্টিবায়োটিক বাছাই: আগে অ্যাক্সেস গ্রুপ, সাথে অ্যালার্জি, গর্ভাবস্থা, কিডনির কার্যক্ষমতা, বয়স ও মজুত — সব একসাথে যাচাই।",
     },
   },
   {
@@ -76,7 +78,7 @@ export const FEATURES: Feature[] = [
     accent: "#0891B2",
     summary: {
       en: "Matches critical patients to a staffed ICU, ventilator and compatible blood. When no hospital has everything, it pairs an ICU with a blood-hub courier.",
-      bn: "গুরুতর রোগীকে কর্মী-সমৃদ্ধ আইসিইউ, ভেন্টিলেটর ও মানানসই রক্তের সাথে মেলায়; কোনো হাসপাতালে সব না থাকলে আইসিইউ ও ব্লাড-হাব কুরিয়ার একসাথে পাঠায়।",
+      bn: "মুমূর্ষু রোগীর জন্য চালু আইসিইউ বেড, ভেন্টিলেটর আর গ্রুপ মিলে যাওয়া রক্ত খুঁজে দেয়; কোনো এক হাসপাতালে সব না থাকলে আইসিইউর সাথে ব্লাড ব্যাংক থেকে রক্ত-কুরিয়ার জুড়ে দেয়।",
     },
   },
   {
@@ -86,7 +88,7 @@ export const FEATURES: Feature[] = [
     accent: "#DC2626",
     summary: {
       en: "When a request is impossible, shows the exact minimal set of rules that clash and solver-verified ways to fix it.",
-      bn: "অনুরোধ অসম্ভব হলে ঠিক কোন নিয়মগুলো সংঘর্ষ করছে এবং সলভার-যাচাইকৃত সমাধান দেখায়।",
+      bn: "অনুরোধ পূরণ করা অসম্ভব হলে ঠিক কোন শর্তগুলো একে অপরের সাথে মেলে না তা দেখায়, সাথে সলভারে যাচাই করা নিরাপদ বিকল্প।",
     },
   },
   {
@@ -96,7 +98,17 @@ export const FEATURES: Feature[] = [
     accent: "#7C3AED",
     summary: {
       en: "Race-proof bookings: row locks in a fixed order, database guards and idempotency keys — the last bed is never given twice.",
-      bn: "রেস-প্রুফ বুকিং: নির্দিষ্ট ক্রমে রো-লক, ডাটাবেস গার্ড ও আইডেম্পোটেন্সি কী — শেষ বেড কখনো দুবার বরাদ্দ হয় না।",
+      bn: "একসাথে অনেক অনুরোধ এলেও নিরাপদ বুকিং: নির্দিষ্ট ক্রমে ডাটাবেস লক আর পুনরাবৃত্তি-রোধী কী — শেষ বেডটি কখনো দুজনকে দেওয়া হয় না।",
+    },
+  },
+  {
+    id: "facilitydesk",
+    name: "FacilityDesk",
+    rubric: "A05",
+    accent: "#0369A1",
+    summary: {
+      en: "Hospitals and blood banks keep their own counts live, either by hand or through a keyed system feed. Every number shows its source and age, and incoming holds are confirmed in one tap.",
+      bn: "হাসপাতাল ও ব্লাড ব্যাংক নিজেরাই হাতে বা নিরাপদ সিস্টেম ফিড দিয়ে সংখ্যা হালনাগাদ রাখে; প্রতিটি সংখ্যার উৎস ও সময় দেখা যায়, আর আসা হোল্ড এক ট্যাপে নিশ্চিত হয়।",
     },
   },
   {
@@ -106,7 +118,7 @@ export const FEATURES: Feature[] = [
     accent: "#D97706",
     summary: {
       en: "Fire 25 simultaneous requests at the final bed and watch exactly one win — live proof for judges.",
-      bn: "শেষ বেডের জন্য একসাথে ২৫টি অনুরোধ পাঠান — ঠিক একটি সফল হয়, বিচারকদের জন্য সরাসরি প্রমাণ।",
+      bn: "শেষ বেডের জন্য একসাথে ২৫টি অনুরোধ পাঠান — ঠিক একটিই সফল হয়। চোখের সামনে সরাসরি প্রমাণ।",
     },
   },
   {
@@ -116,7 +128,7 @@ export const FEATURES: Feature[] = [
     accent: "#E11D48",
     summary: {
       en: "Royal College of Physicians NEWS2 acuity scoring with ABO/Rh blood compatibility checks.",
-      bn: "রয়্যাল কলেজ অব ফিজিশিয়ানস NEWS2 তীব্রতা স্কোর এবং ABO/Rh রক্ত সামঞ্জস্য যাচাই।",
+      bn: "রয়্যাল কলেজ অব ফিজিশিয়ানসের NEWS2 স্কোরে রোগীর অবস্থা কতটা গুরুতর তা মাপা, আর ABO/Rh অনুযায়ী রক্তের গ্রুপ মেলানো।",
     },
   },
   {
@@ -126,7 +138,7 @@ export const FEATURES: Feature[] = [
     accent: "#0F766E",
     summary: {
       en: "First-Expired, First-Out dispensary with pharmacist approval for Watch and Reserve antibiotics.",
-      bn: "প্রথম-মেয়াদোত্তীর্ণ-প্রথম-বের ডিস্পেন্সারি, ওয়াচ ও রিজার্ভ অ্যান্টিবায়োটিকে ফার্মাসিস্ট অনুমোদন।",
+      bn: "যে ওষুধের মেয়াদ আগে শেষ হবে, সেটিই আগে দেওয়া হয়; ওয়াচ ও রিজার্ভ অ্যান্টিবায়োটিকে ফার্মাসিস্টের অনুমোদন লাগে।",
     },
   },
   {
@@ -136,7 +148,7 @@ export const FEATURES: Feature[] = [
     accent: "#0284C7",
     summary: {
       en: "Keeps working without internet and blocks unsafe overwrites when devices reconnect.",
-      bn: "ইন্টারনেট ছাড়াও কাজ চলে এবং পুনঃসংযোগে অনিরাপদ ওভাররাইট আটকায়।",
+      bn: "ইন্টারনেট না থাকলেও কাজ চলে; সংযোগ ফিরলে কারও তথ্য চুপচাপ মুছে না দিয়ে নিরাপদে মিলিয়ে নেয়।",
     },
   },
   {
@@ -146,7 +158,17 @@ export const FEATURES: Feature[] = [
     accent: "#2563EB",
     summary: {
       en: "Live WHO Access-ratio KPI, staffed-vs-idle ICU gap and blood scarcity analytics.",
-      bn: "সরাসরি WHO অ্যাক্সেস অনুপাত, কর্মী-সমৃদ্ধ বনাম অলস আইসিইউ এবং রক্ত সংকট বিশ্লেষণ।",
+      bn: "সরাসরি দেখুন WHO অ্যাক্সেস অনুপাত, কতগুলো আইসিইউ বেড চালু আর কতগুলো জনবলের অভাবে বন্ধ, আর কোথায় রক্তের ঘাটতি।",
+    },
+  },
+  {
+    id: "careradar",
+    name: "CareRadar",
+    rubric: "3D Map",
+    accent: "#0F766E",
+    summary: {
+      en: "3D satellite & street locator for nearby pharmacies, ICU hospitals, and blood banks with turn-by-turn navigation.",
+      bn: "কাছের ফার্মেসি, আইসিইউ হাসপাতাল ও ব্লাড ব্যাংক খুঁজতে ৩ডি স্যাটেলাইট ও স্ট্রিট ম্যাপ এবং টার্ন-বাই-টার্ন নেভিগেশন।",
     },
   },
   {
@@ -156,7 +178,7 @@ export const FEATURES: Feature[] = [
     accent: "#9333EA",
     summary: {
       en: "Bangla/English intake assistant that only calls the solver tools, never invents data, and always waits for human sign-off.",
-      bn: "বাংলা/ইংরেজি ইনটেক সহকারী — শুধু সলভার টুল ব্যবহার করে, তথ্য বানায় না, এবং সবসময় মানুষের অনুমোদনের অপেক্ষা করে।",
+      bn: "বাংলা বা ইংরেজিতে রোগীর তথ্য নেওয়ার সহকারী — শুধু যাচাই করা টুল ব্যবহার করে, নিজে কোনো তথ্য বানায় না, আর চূড়ান্ত সিদ্ধান্তের জন্য সবসময় চিকিৎসকের অনুমোদন চায়।",
     },
   },
 ];

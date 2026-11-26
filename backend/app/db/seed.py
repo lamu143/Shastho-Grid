@@ -998,7 +998,11 @@ async def seed_database(session: AsyncSession) -> dict[str, int]:
         if guideline is None:
             guideline = AwareGuideline(
                 id=seed_uuid("guideline", item["syndrome_code"]),
-                **item,
+                source_document=item.get("source_document", "WHO AWaRe Antibiotic Book (2022) & Bangladesh DGHS STG"),
+                rule_version=item.get("rule_version", "2026.1"),
+                effective_date=item.get("effective_date", "2026-01-01"),
+                review_status=item.get("review_status", "CLINICIAN_REVIEWED_DEMO"),
+                **{k: v for k, v in item.items() if k not in {"source_document", "rule_version", "effective_date", "review_status"}},
             )
             session.add(guideline)
         guidelines_by_code[item["syndrome_code"]] = guideline

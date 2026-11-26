@@ -6,14 +6,13 @@ export async function loginViaCredentials(
   account: DemoAccount = DEMO_ACCOUNTS.dispenser
 ): Promise<void> {
   await page.goto("/login", { waitUntil: "domcontentloaded" });
+  // Target the input fields themselves: the credentials <form> is also labelled
+  // "Email & password" (by its tab), so a bare getByLabel(/email/i) can match the form.
   const emailInput = page
-    .getByLabel(/email/i)
-    .or(page.getByPlaceholder(/email/i))
+    .getByRole("textbox", { name: /email/i })
+    .or(page.locator('input[type="email"]'))
     .first();
-  const passwordInput = page
-    .getByLabel(/password/i)
-    .or(page.getByPlaceholder(/password/i))
-    .first();
+  const passwordInput = page.locator('input[type="password"]').first();
 
   await emailInput.fill(account.email);
   await passwordInput.fill(account.password);
@@ -75,6 +74,7 @@ export async function unlockOfflinePin(
   if (email) {
     const pinEmail = page
       .getByLabel(/offline.*email|email/i)
+      .and(page.locator("input"))
       .or(page.getByPlaceholder(/email/i))
       .first();
     if (await pinEmail.isVisible().catch(() => false)) {
@@ -87,6 +87,7 @@ export async function unlockOfflinePin(
 
   const pinInput = page
     .getByLabel(/offline pin|pin/i)
+    .and(page.locator("input"))
     .or(page.getByPlaceholder(/pin|2026/i))
     .first();
   await expect(pinInput).toBeVisible();

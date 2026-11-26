@@ -74,6 +74,7 @@ def no_real_ai_keys(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     monkeypatch.setattr(settings, "GROQ_API_KEY", None)
     monkeypatch.setattr(settings, "GEMINI_API_KEY", None)
+    monkeypatch.setattr(settings, "GEMINI_API_KEYS", [])
 
 
 @pytest_asyncio.fixture(autouse=True)

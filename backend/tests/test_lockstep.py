@@ -100,7 +100,25 @@ async def test_racelab_run_endpoint(client: AsyncClient, login_as) -> None:
     assert body["errors"] == 0
     assert body["db_available_after"] == 0
     assert body["double_bookings"] == 0
+    assert body["wall_time_ms"] >= 0
+    assert body["winner_reservation_id"] is not None
     assert len(body["attempts"]) == 25
+    assert all("started_offset_ms" in a and "finished_offset_ms" in a for a in body["attempts"])
+
+    status_res = await client.get("/api/v1/racelab/status", headers=headers)
+    assert status_res.status_code == 200, status_res.text
+    status_body = status_res.json()
+    assert status_body["facility_code"] == "RACELAB-SANDBOX"
+    assert status_body["available_count"] == 0
+    assert status_body["active_held_count"] == 1
+    assert status_body["active_reservation_id"] == body["winner_reservation_id"]
+
+    reset_res = await client.post("/api/v1/racelab/reset", headers=headers)
+    assert reset_res.status_code == 200
+    status_after = (await client.get("/api/v1/racelab/status", headers=headers)).json()
+    assert status_after["available_count"] == 1
+    assert status_after["active_held_count"] == 0
+    assert status_after["active_reservation_id"] is None
 
 
 # ------------------------------------------------------------- idempotency ----

@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import re
+import time
 import uuid
 from contextlib import asynccontextmanager
 from typing import Any
@@ -16,6 +18,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import settings
 from app.core.errors import register_exception_handlers
+from app.core.telemetry import telemetry
 from app.core.rate_limit import (
     RateLimitMiddleware,
     check_redis_health,
@@ -28,6 +31,7 @@ from app.routers.auth import router as auth_router
 from app.routers.critical_care import router as critical_care_router
 from app.routers.copilot import router as copilot_router
 from app.routers.feed import router as feed_router
+from app.routers.sathi import router as sathi_router
 from app.routers.lockstep import router as lockstep_router
 from app.services.lockstep import sweep_expired_holds
 from app.routers.dispenses import router as dispenses_router
@@ -41,12 +45,30 @@ from app.schemas.common import HealthResponse
 logger = logging.getLogger(__name__)
 
 
+_TRACE_ID_RE = re.compile(r"[A-Za-z0-9-]{8,64}")
+
+
 class TraceIdMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Any) -> Any:
-        trace_id = request.headers.get("X-Trace-Id") or str(uuid.uuid4())
+        # Accept a caller trace id only if it is short and safe (audit column is 64 chars).
+        supplied = request.headers.get("X-Trace-Id", "")
+        trace_id = supplied if _TRACE_ID_RE.fullmatch(supplied) else str(uuid.uuid4())
         request.state.trace_id = trace_id
+        started = time.perf_counter()
         response = await call_next(request)
+        duration_ms = (time.perf_counter() - started) * 1000.0
         response.headers.setdefault("X-Trace-Id", trace_id)
+        response.headers.setdefault("X-Response-Time-Ms", f"{duration_ms:.2f}")
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        telemetry.record(
+            method=request.method,
+            path=request.url.path,
+            status_code=response.status_code,
+            duration_ms=duration_ms,
+            trace_id=trace_id,
+        )
         return response
 
 
@@ -79,18 +101,28 @@ async def _lockstep_sweeper_loop() -> None:
     while True:
         await asyncio.sleep(settings.HOLD_SWEEP_INTERVAL_SECONDS)
         try:
+            total_expired = 0
             async with AsyncSessionLocal() as session:
-                expired = await sweep_expired_holds(session)
-            if expired:
-                logger.info("LockStep sweeper released %d expired hold(s)", expired)
+                while True:
+                    expired = await sweep_expired_holds(session)
+                    total_expired += expired
+                    if expired < 100:
+                        break
+            if total_expired:
+                logger.info("LockStep sweeper released %d expired hold(s)", total_expired)
         except Exception as exc:  # keep the loop alive through transient DB errors
             logger.warning("LockStep sweeper failed: %s", exc)
 
+
+_is_dev_like = settings.ENVIRONMENT.strip().lower() in {"development", "dev", "local", "test"}
 
 app = FastAPI(
     title=settings.APP_NAME,
     version="0.1.0",
     lifespan=lifespan,
+    docs_url="/docs" if _is_dev_like else None,
+    redoc_url="/redoc" if _is_dev_like else None,
+    openapi_url="/openapi.json" if _is_dev_like else None,
 )
 
 # Register middleware in reverse execution order (LIFO):
@@ -102,7 +134,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Trace-Id", "X-Idempotent-Replay", "Retry-After"],
+    expose_headers=["X-Trace-Id", "X-Response-Time-Ms", "X-Idempotent-Replay", "Retry-After"],
 )
 app.add_middleware(TraceIdMiddleware)
 
@@ -143,3 +175,4 @@ app.include_router(critical_care_router, prefix="/api/v1")
 app.include_router(lockstep_router, prefix="/api/v1")
 app.include_router(copilot_router, prefix="/api/v1")
 app.include_router(feed_router, prefix="/api/v1")
+app.include_router(sathi_router, prefix="/api/v1")

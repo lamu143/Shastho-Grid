@@ -38,6 +38,11 @@ _UPGRADE_STATEMENTS = (
     "ALTER TABLE blood_inventories ADD COLUMN IF NOT EXISTS data_source VARCHAR(16) NOT NULL DEFAULT 'SEED_DEMO'",
     "ALTER TABLE hospital_resources ADD COLUMN IF NOT EXISTS reported_at TIMESTAMPTZ",
     "ALTER TABLE blood_inventories ADD COLUMN IF NOT EXISTS reported_at TIMESTAMPTZ",
+    "ALTER TABLE facility_feed_keys ADD COLUMN IF NOT EXISTS scope VARCHAR(12) NOT NULL DEFAULT 'ALL'",
+    "ALTER TABLE aware_guidelines ADD COLUMN IF NOT EXISTS source_document VARCHAR(160) NOT NULL DEFAULT 'WHO AWaRe Antibiotic Book / DGHS Bangladesh'",
+    "ALTER TABLE aware_guidelines ADD COLUMN IF NOT EXISTS rule_version VARCHAR(32) NOT NULL DEFAULT '2026.1-demo'",
+    "ALTER TABLE aware_guidelines ADD COLUMN IF NOT EXISTS effective_date VARCHAR(16) NOT NULL DEFAULT '2026-01-01'",
+    "ALTER TABLE aware_guidelines ADD COLUMN IF NOT EXISTS review_status VARCHAR(32) NOT NULL DEFAULT 'PENDING_CLINICAL_REVIEW'",
 )
 
 

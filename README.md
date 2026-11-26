@@ -1,153 +1,192 @@
-# AWaReGrid
+# ShasthoGrid · স্বাস্থ্যগ্রিড
 
-> **"Provably Safe WHO AWaRe Antibiotic Stewardship, Even Offline"**
+> **Provably safe care: antibiotics, ICU beds and blood, even offline.**
 >
-> **Code-ArenaX Hack the Vibe 2026** — *World Problem Solver Track (Challenges A02 + A04)*
+> **Code-ArenaX Hack the Vibe 2026**, World Problem Solver Track: challenges **A02** (constraint-based decision making) and **A05** (concurrency and transaction management). Formerly *AWaReGrid*.
 
-AWaReGrid is an offline-first clinical antibiotic stewardship Progressive Web App (PWA), deterministic **Google OR-Tools CP-SAT** regimen optimizer, and **FEFO (First-Expired, First-Out)** micro-dispensary operating system built for frontline community clinics (modeled on Ashulia Union Sub-Center and Dhamrai Community Dispensary).
+ShasthoGrid brings two problems from Bangladesh's frontline health system together on one dependable platform:
+
+1. **Antibiotic stewardship at community clinics.** It recommends the safest WHO AWaRe regimen from the stock actually on the shelf, and it works offline.
+2. **Critical-care dispatch in Dhaka.** It finds the best hospital for a critically ill patient, explains *why* when no single hospital can take them, and then books the bed and blood atomically so the last ICU bed is never given out twice.
+
+Every recommendation is deterministic and explainable. Every AI step is guarded, and a clinician makes the final decision.
 
 ---
 
-## Key Capabilities
+## Features
 
-1. **Deterministic 3-Pass Google OR-Tools CP-SAT Regimen Optimizer**:
-   - **Pass 1 (Optimization)**: Minimizes WHO AWaRe stewardship cost (`ACCESS = 1`, `WATCH = 15`, `RESERVE = 120`) + FEFO expiry priority while strictly enforcing allergy class expansions (`SULFONAMIDE -> COTRIMOXAZOLE`, `PENICILLIN -> AMOXICILLIN`, etc.), pregnancy contraindications, renal eGFR thresholds, minimum age rules, viral mild no-antibiotic rules (`ACUTE_BRONCHITIS`, `COMMON_COLD`, `VIRAL_URI`), and active FEFO stock (`qty_remaining >= 1`, `days_to_expiry > 0`).
-   - **Pass 2 (Exact MUS Infeasibility Proof)**: When `INFEASIBLE`, re-solves with `cp_model_presolve=False`, `num_workers=1`, and **no objective function** to extract exact Minimal Unsatisfiable Subset (`sufficient_assumptions_for_infeasibility()`) conflict cores.
-   - **Pass 3 (Safe Relaxations)**: Computes deterministic safe clinical alternatives (`SWITCH_TO_SYMPTOMATIC_CARE`, `ESCALATE_WATCH_WITH_PHARMACIST_APPROVAL`, `REFER_UPAZILA_STOCK_TRANSFER`).
-2. **Offline-First PWA & HTTP 409 Conflict Workbench (No Unsafe LWW)**:
-   - Built on Next.js 16 + `@serwist/next` (`reloadOnOnline: false`, `/~offline` fallback) and Dexie.js IndexedDB (`awaregrid_offline_v1`) with client-generated UUIDv4 IDs and offline salted PBKDF2 PIN unlock (`2026`).
-   - Rejects unsafe Last-Write-Wins (LWW) overwrites: version skew (`base_version != server_version`) triggers server-side CP-SAT re-evaluation on the merged state and returns **HTTP 409 (`SYNC_VERSION_CONFLICT`)** with `server_snapshot`, `client_snapshot`, and `cpsat_verdict`, resolved cleanly in the side-by-side `/dashboard/sync` Conflict Workbench.
-3. **Atomic FEFO Dispensary State Machine & WHO >=60% KPI**:
-   - Enforces `DRAFT -> PENDING_APPROVAL -> DISPENSED / REJECTED / VOIDED` with pharmacist/admin approval gates, atomic FEFO stock decrement, void stock restoration, and live WHO `>=60%` Access ratio telemetry (starting Ashulia at `13/25 = 52.0%` so 5 compliant Access dispenses lift it to `18/30 = 60.0%`).
-4. **De-Identified AI Counseling & Bilingual Voice Intake (`EN / বাংলা`)**:
-   - Strips all PII via `_assert_deidentified` before any external AI call.
-   - Routes **Groq** (`openai/gpt-oss-120b` counseling, `whisper-large-v3-turbo` Bangla/English voice intake, `llama-prompt-guard-2-86m` prompt injection guard) -> **Google Gemini** (`gemini-3.5-flash-lite`) -> **`DETERMINISTIC_FALLBACK_CARDS`** (`deterministic-local-template`), gated by `_passes_hallucination_guard`.
+| Feature | What it does | Challenge |
+|---|---|---|
+| **RxSolve** | A CP-SAT antibiotic optimizer. Access-first, it weighs allergy, pregnancy, renal function, age and live FEFO stock together. | A02 |
+| **CareMatch** | A CP-SAT hospital matcher covering ICU, ventilator, specialty, ABO/Rh-compatible blood, public-only and ETA limits. It ranks stale data lower. | A02 |
+| **ConflictProof** | When no hospital fits, it returns the *exact* minimal conflict sets (MUS) and safe repairs, such as a split dispatch: a bed at one hospital plus blood couriered from another. Clinical-safety constraints are never relaxed. | A02 |
+| **LockStep** | Atomic holds on bed, ventilator and blood with row locks in one global order, idempotency keys, a hold TTL and an expiry sweeper. | A05 |
+| **RaceLab** | A live proof: up to 25 simultaneous requests compete for one sandbox ICU bed, exactly one wins, and there are zero double bookings. | A05 |
+| **FacilityDesk** | Hospitals and blood banks keep their own counts live, by hand or through a scoped, hashed API-key feed. They confirm incoming patients in one tap. | A05 |
+| **PulseScore** | NEWS2 (RCP 2017) acuity and the ABO/Rh compatibility matrix. | n/a |
+| **Shastho Copilot** | Bangla, English and Banglish paramedic notes go to structured vitals and then a CareMatch run. PII is redacted, injection is screened, and the AI cannot invent numbers or relax safety flags. | n/a |
+| **FreshStock / SyncSafe** | FEFO dispensary, offline Dexie queue, and an HTTP 409 conflict workbench (no unsafe last-write-wins). | n/a |
+| **StewardLens** | WHO ≥60% Access KPI plus critical-care insights: ICU occupancy and unstaffed beds, blood scarcity and expiry, hold outcomes, data freshness, and de-identified Lakehouse NDJSON export. | n/a |
+| **CareRadar** | 3D Satellite & Street map (`/radar`) for discovering nearby hospitals, pharmacies, and blood banks via live OpenStreetMap + OSRM routing with estimated travel times. | n/a |
+
+### Where the bed and blood numbers come from
+
+DGHS has no public live feed of ICU beds or blood stock. ShasthoGrid takes counts directly from each facility, either **staff entry** in FacilityDesk or a **system feed** (`POST /api/v1/feed/v1/capacity` with a per-facility key that is scoped to beds or blood). Every count carries its source (`SEED_DEMO`, `STAFF` or `FEED`) and the time it was reported. Dispatchers see each hospital as **Live**, **Stale** (more than 6 h old) or **Demo**. Integration guide: [`docs/hospital-feed.md`](docs/hospital-feed.md).
+
+> **Honesty note.** The seeded hospitals are real Dhaka institutions, but their bed and blood counts are **simulated demo data** until a facility connects. The seed is designed so that the "Farmgate" obstetric emergency (ICU + ventilator + 2× O−, public, ≤15 min) is infeasible at any single hospital. That is how ConflictProof is shown.
 
 ---
 
 ## Architecture
 
-```text
-+-----------------------------------------------------------------------+
-| Next.js 16 App Router PWA (frontend/)                                 |
-| - 10 Bilingual Routes (EN / বাংলা) + /~offline Serwist SW Fallback    |
-| - Dexie.js (awaregrid_offline_v1) + localRules.ts + syncEngine.ts     |
-| - 409 Conflict Workbench, WCAG 2.1 AA Tokens, Reduced Motion Support  |
-+-----------------------------------+-----------------------------------+
-                                    | HTTPS / REST (/api/v1/* + JWT + Idempotency-Key)
-                                    v
-+-----------------------------------------------------------------------+
-| FastAPI + Python 3.12 Backend (backend/)                              |
-| - Auth/RBAC (Argon2id + HS256 JWT, 4 Roles, clinic_id Tenant Scope)   |
-| - OR-Tools CP-SAT 3-Pass Solver (Pass 1 Optimal, Pass 2 MUS, Pass 3)  |
-| - Atomic Dispense & Conflict-Safe Sync Services                       |
-| - De-Identified AI Steward (Groq -> Gemini -> Deterministic Fallback) |
-+-------------------+-------------------------------+-------------------+
-                    |                               |
-                    v                               v
-     +--------------+--------------+     +----------+-----------+
-     | PostgreSQL 16 (11 Tables)   |     | Redis 7 / Upstash    |
-     | Neon-ready asyncpg pool     |     | Dual REST/TCP        |
-     +-----------------------------+     | Rate Limiter         |
-                                         +----------------------+
+```mermaid
+flowchart LR
+  subgraph Client["Next.js 16 PWA · React 19 · Serwist · Dexie"]
+    UI["Dispatch · RaceLab · FacilityDesk · StewardLens · RxSolve"]
+    Q["Offline queue + 409 workbench"]
+  end
+  subgraph API["FastAPI · Python 3.12"]
+    MW["Trace-ID → CORS → Rate limit (trusted-proxy aware)"]
+    CM["CareMatch / ConflictProof (CP-SAT, pure)"]
+    RX["RxSolve (CP-SAT 3-pass)"]
+    LS["LockStep (row locks, idempotency, sweeper)"]
+    FD["Feed ingestion (scoped, hashed keys)"]
+    AI["Copilot / Steward agent (Groq → Gemini → deterministic)"]
+  end
+  HIS["Hospital HIS / blood-bank LIS"] -- X-Facility-Key --> FD
+  UI -- JWT + Idempotency-Key --> MW
+  MW --> CM & RX & LS & AI
+  LS & FD & CM & RX --> PG[("PostgreSQL 16")]
+  MW --> R[("Redis / Upstash")]
 ```
+
+- **Lock order** (deadlock-free): reservations → hospital_resources → blood_inventories, each sorted by id.
+- **Authorisation:** JWT plus a PIN step; RBAC across 7 roles; clinic scope for stewardship and facility scope for officers (BOLA-safe). Denied attempts are audited.
+- **Abuse limits:** a stricter per-IP limit on login and the feed. `X-Forwarded-For` is trusted only from configured proxies.
+- **AI safety:**
+  - De-identification before any model call.
+  - A prompt-injection screen.
+  - A hallucination guard: drugs must come from the solver, vitals must appear in the note, and safety flags can only become stricter.
+  - A deterministic fallback when no key is set.
 
 ---
 
-## Seeded Demo Accounts (PIN: `2026`)
+## Demo accounts (offline PIN `2026`)
 
-| Role | Clinic | Email | Password | Offline PIN |
-|---|---|---|---|---|
-| **Dispenser** | Ashulia Union Sub-Center (`ASHULIA-01`) | `dispenser@awaregrid.org` | `Dispenser#2026!` | `2026` |
-| **Pharmacist** | Ashulia Union Sub-Center (`ASHULIA-01`) | `pharmacist@awaregrid.org` | `Pharmacist#2026!` | `2026` |
-| **Auditor** | Ashulia Union Sub-Center (`ASHULIA-01`) | `auditor@awaregrid.org` | `Auditor#2026!` | `2026` |
-| **Admin** | Ashulia Union Sub-Center (`ASHULIA-01`) | `admin@awaregrid.org` | `Admin#2026!` | `2026` |
-| **Dispenser (Isolation)** | Dhamrai Community Dispensary (`DHAMRAI-01`) | `dhamrai.dispenser@awaregrid.org` | `Dispenser#2026!` | `2026` |
+| Role | Email | Password | Lands on |
+|---|---|---|---|
+| Dispatcher | `dispatcher@shasthogrid.org` | `Dispatcher#2026!` | `/dispatch` |
+| Hospital admin (BMU) | `bmu.admin@shasthogrid.org` | `Hospital#2026!` | `/facility` |
+| Blood-bank officer (DMCH) | `dmch.blood@shasthogrid.org` | `BloodBank#2026!` | `/facility` |
+| Pharmacist | `pharmacist@awaregrid.org` | `Pharmacist#2026!` | `/dashboard` |
+| Dispenser | `dispenser@awaregrid.org` | `Dispenser#2026!` | `/dashboard` |
+| Auditor | `auditor@awaregrid.org` | `Auditor#2026!` | `/dashboard` |
+| Admin | `admin@awaregrid.org` | `Admin#2026!` | `/dashboard` |
 
-> **Synthetic development data only.** Demo accounts, patient records, historical prescriptions, inventory quantities, and hospital/blood availability are illustrative and must never be treated as real. The seed command is disabled when `ENVIRONMENT=production` or `prod`.
+> These are synthetic development accounts. The seed refuses to run when `ENVIRONMENT=production`.
 
 ---
 
-## Local Setup
+## Run it
 
-### Option 1: Docker Compose (Infrastructure / Full Stack)
+### Everything in Docker
 
 ```bash
-# Start PostgreSQL 16 and Redis 7 (plus backend service)
-docker compose up -d postgres redis backend
+docker compose up --build        # Postgres :5432, Redis :6379, API :8000, PWA :3000
+docker compose exec backend python -m app.db.seed
 ```
 
-### Option 2: Manual Local Development (`uv` + `npm`)
-
-#### 1. Backend (`backend/`)
+### Local development
 
 ```bash
+docker compose up -d postgres redis
+
 cd backend
 cp .env.example .env
-uv venv --python 3.12
-uv pip install -e ".[dev]"
-
-# Initialize schema and idempotent seed data
+uv sync --group dev
 uv run python -m app.db.seed
+uv run uvicorn app.main:app --reload --port 8000
 
-# Start FastAPI server
-uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
+cd ../frontend
+npm install
+npm run dev                      # http://localhost:3000 (service worker off in dev)
 ```
 
-#### 2. Frontend (`frontend/`)
+> The repository folder name ends in a space (`AWaReGrid `), so quote paths in your shell.
+
+### Tests
 
 ```bash
+# backend: uses a separate DB that the suite drops and recreates (CREATE DATABASE awaregrid_test once)
+cd backend
+DATABASE_URL=postgresql+asyncpg://awaregrid:awaregrid@localhost:5432/awaregrid_test \
+  uv run --group dev pytest -q
+
+# frontend
 cd frontend
-npm install
-
-# Development server (Serwist SW disabled in dev)
-npm run dev
-
-# Production Serwist PWA build & verification
 npx tsc --noEmit && npm run lint && npm run build
-npm run start
+npx playwright test              # needs the backend on :8000
 ```
 
----
-
-## Application Routes
-
-| Route | Purpose |
-|---|---|
-| `/` | Bilingual landing showcase, WHO AWaRe overview, and workflow CTAs |
-| `/login` | Email/Password sign-in, expanded Quick-Fill Demo Role Drawer, and Offline PIN Unlock tab |
-| `/dashboard` | Clinic header, live WHO `>=60%` Access KPI gauge, and dispense approval queue |
-| `/dashboard/triage` | Patient create/edit, Bangla/EN voice intake, CP-SAT + offline optimization, Pass 2 MUS & Pass 3 relaxations, draft creation |
-| `/dashboard/inventory` | FEFO-sorted (`expiry_date ASC`) batch table, search/filter/sort, expiring/stockout badges, pharmacist/admin batch management |
-| `/dashboard/sync` | Dexie mutation queue, Sync Now trigger, and side-by-side HTTP 409 Conflict Workbench |
-| `/dashboard/analytics` | Live WHO `>=60%` target progress bar, AWaRe distribution breakdown, and stock risk metrics |
-| `/dashboard/profile` | Authenticated user identity, RBAC permissions matrix, online PIN check, and cached Offline PIN vault |
-| `/admin` | RBAC-guarded (`admin` only) Clinics, Users, WHO Guidelines (15), Antibiotic Catalog (20), and Audit Logs (`trace_id` filter) |
-| `/dashboard/settings` | `EN / বাংলা` toggle, Dexie offline cache hydration & store counts, Service Worker status, and reduced-motion info |
-| `/~offline` | Precached Serwist offline fallback page |
+The backend suite covers:
+- the CP-SAT solvers and MUS minimality
+- NEWS2 and blood compatibility
+- the 25-way RaceLab race
+- idempotent replay
+- facility-scope (BOLA) denials
+- feed keys and staleness
+- Copilot guards
+- the security-hardening regression tests
 
 ---
 
-## Core API Endpoints
+## Main routes
 
-- **Health**: `GET /healthz`
-- **Auth**: `POST /api/v1/auth/login`, `POST /api/v1/auth/verify-pin`, `GET /api/v1/auth/me`
-- **Admin**: `GET /api/v1/admin/clinics`, `GET/POST /api/v1/admin/users`, `GET /api/v1/admin/audit-logs`, `GET /api/v1/admin/guidelines`, `GET /api/v1/admin/catalog`
-- **Clinical Optimization & Voice**: `POST /api/v1/optimize`, `POST /api/v1/voice/intake`
-- **Patients & FEFO Inventory**: `GET/POST /api/v1/patients`, `GET/PATCH /api/v1/patients/{id}`, `GET/POST /api/v1/inventory/batches`, `PATCH /api/v1/inventory/batches/{id}`
-- **Dispense Workflow**: `GET/POST /api/v1/dispenses`, `POST /api/v1/dispenses/{id}/{submit,approve,reject,void}`
-- **Offline Sync & Conflicts**: `GET /api/v1/sync/bootstrap`, `POST /api/v1/sync/mutations`, `GET /api/v1/sync/conflicts`, `POST /api/v1/sync/conflicts/{id}/resolve`
-- **Analytics**: `GET /api/v1/analytics/stewardship`
+| Route | Who | Purpose |
+|---|---|---|
+| `/dispatch` | dispatcher, admin | Copilot or vitals intake, then CareMatch, map, ConflictProof repairs, and LockStep hold |
+| `/radar` | all roles (public/clinical) | CareRadar 3D hospital, pharmacy, and blood-bank finder with OSRM routing |
+| `/race-lab` | dispatcher, admin | Live concurrency race on the sandbox bed |
+| `/facility` | hospital_admin, blood_bank_officer, admin | FacilityDesk: counts, incoming holds, feed keys |
+| `/insights` | critical-care roles, auditor | StewardLens critical-care analytics |
+| `/dashboard/*` | dispenser, pharmacist, auditor, admin | RxSolve triage, FEFO inventory, sync, stewardship analytics |
+| `/admin` | admin | Users, clinics, guidelines, catalog, audit log |
+
+## Main API (all under `/api/v1`)
+
+- **Facilities:**
+  - `GET /facilities`, with filters, ETA sort and freshness
+  - `GET /facilities/{id}`
+  - `PATCH /facilities/{id}/resources/{type}`
+  - `PATCH /facilities/{id}/blood/{group}`
+- **CareMatch:** `POST /carematch/optimize`, `GET /carematch/{id}`
+- **LockStep:**
+  - `POST /reservations` (requires `Idempotency-Key`)
+  - `GET /reservations`
+  - `POST /reservations/{id}/transition`
+  - `POST /racelab/reset`, `POST /racelab/run`
+- **Feed:**
+  - `POST|GET /facilities/{id}/feed-keys`
+  - `DELETE /facilities/{id}/feed-keys/{key_id}`
+  - `POST /feed/v1/capacity`
+- **Insights:** `GET /critical-care/insights?days=7`, `GET /critical-care/summary`
+- **Copilot:** `POST /copilot/triage-assist`
+- **Stewardship:** `POST /optimize`, `/patients`, `/inventory/batches`, `/dispenses`, `/sync/*`, `/analytics/stewardship`
+- **Telemetry & Analytics:** `GET /admin/telemetry`, `GET /admin/telemetry/prometheus`, `GET /analytics/lakehouse-export`, `GET /analytics/teamwork-graph`
+- **Health:** `GET /health` (liveness/dependency check; `docs/operations.md` covers Redis fallback, backups, and production gates)
 
 ---
 
-## Cloud Deployment (Neon + Upstash + Render + Vercel)
+## Deploy
 
-1. **PostgreSQL (Neon)**: Create a Neon PostgreSQL 16 database and copy its connection string into `DATABASE_URL` (the backend normalizes `postgresql://` to `postgresql+asyncpg://` automatically with `pool_pre_ping=True` and `pool_recycle=240`). Apply the schema, then onboard verified facility data through an authorized process. Do not run the synthetic seed against production; it refuses to run when `ENVIRONMENT=production` or `prod`.
-2. **Redis (Upstash)**: Create an Upstash Redis database and set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (used automatically over local `REDIS_URL` when present).
-3. **Backend (Render)**: Deploy using root [`render.yaml`](./render.yaml) (`rootDir: backend`, `Dockerfile`, `--workers 1`, `healthCheckPath: /healthz`). Configure `DATABASE_URL`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `CORS_ORIGINS`, and optional `GROQ_API_KEY` / `GEMINI_API_KEY` in the Render dashboard (`sync: false`).
-4. **Frontend (Vercel)**: Import `frontend/` in Vercel (configured via `frontend/vercel.json` with `/sw.js` `Cache-Control: public, max-age=0, must-revalidate` and security headers). Set `NEXT_PUBLIC_API_URL` to your deployed Render API URL.
+1. **Database:** Neon Postgres. Set `DATABASE_URL`; the async driver is added automatically. Never run the demo seed against production.
+2. **Redis:** Upstash. Set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
+3. **API:** Render, via [`render.yaml`](render.yaml) (`--workers 1`, health check `/healthz`). Set these variables:
+   - `ENVIRONMENT=production`
+   - a strong `JWT_SECRET_KEY` (outside dev/test the placeholder secret is refused)
+   - `CORS_ORIGINS`
+   - `TRUSTED_PROXIES`, the load balancer IPs
+   - optionally `GROQ_API_KEY` and `GEMINI_API_KEY`
+4. **PWA:** Vercel, from `frontend/`. Set `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SITE_URL` before building.
 
-Public reference data and provenance notes are in [`backend/data/reference/`](./backend/data/reference/). Dynamic patient, pharmacy, bed, ventilator, and blood inventory data must come from authorized operational systems; seeded demo values are not live observations.
-
-> Note: Keep all API keys and secrets in environment variables (`.env` locally, platform secret stores in cloud). Never commit real credentials to version control.
+Public reference data and its provenance are in [`backend/data/reference/`](backend/data/reference/). Keep secrets in platform secret stores, and never commit `.env`.

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -46,6 +46,71 @@ class TokenPayload(BaseModel):
     clinic_name: str
     iat: int
     exp: int
+    iss: str | None = None
+    aud: str | None = None
+    jti: str | None = None
+
+
+ROLE_SCOPES: dict[str, list[str]] = {
+    "dispenser": [
+        "patients:read",
+        "patients:write",
+        "stewardship:optimize",
+        "dispenses:create",
+        "dispenses:submit",
+        "inventory:read",
+        "sync:use",
+    ],
+    "pharmacist": [
+        "patients:read",
+        "patients:write",
+        "stewardship:optimize",
+        "dispenses:approve",
+        "dispenses:reject",
+        "dispenses:void",
+        "inventory:write",
+        "sync:resolve_conflicts",
+    ],
+    "auditor": [
+        "analytics:read",
+        "inventory:read",
+        "dispenses:read",
+        "telemetry:read",
+        "audit:read",
+    ],
+    "dispatcher": [
+        "carematch:solve",
+        "copilot:use",
+        "lockstep:reserve",
+        "lockstep:en_route",
+        "lockstep:cancel",
+        "racelab:run",
+        "insights:read",
+    ],
+    "hospital_admin": [
+        "facility:resources:write",
+        "lockstep:confirm",
+        "lockstep:admit",
+        "feed_keys:manage",
+        "insights:read",
+    ],
+    "blood_bank_officer": [
+        "facility:blood:write",
+        "blood_dispatches:read",
+        "feed_keys:manage",
+        "insights:read",
+    ],
+    "admin": [
+        "admin:all",
+        "telemetry:read",
+        "webhooks:test",
+        "audit:read",
+        "stewardship:optimize",
+        "carematch:solve",
+        "lockstep:reserve",
+        "racelab:run",
+    ],
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,6 +141,8 @@ def create_access_token(
         "role": role,
         "clinic_id": str(clinic_id),
         "clinic_name": clinic_name,
+        "iss": "shasthogrid",
+        "jti": str(uuid4()),
         "iat": int(now.timestamp()),
         "exp": int(expire.timestamp()),
     }
@@ -88,6 +155,7 @@ def decode_access_token(token: str) -> TokenPayload:
             token,
             settings.JWT_SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM],
+            issuer="shasthogrid",
         )
         return TokenPayload.model_validate(raw_payload)
     except (JWTError, ValueError) as exc:

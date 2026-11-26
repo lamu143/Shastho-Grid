@@ -67,14 +67,14 @@ export function OfflineIndicator() {
       <span
         className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${
           isOnline
-            ? "border-[#059669]/40 bg-[#ECFDF5] text-[#065F46]"
-            : "border-[#D97706]/50 bg-[#FEF3C7] text-[#92400E]"
+            ? "border-success/40 bg-success-soft text-success-ink"
+            : "border-warn/50 bg-warn-soft text-warn-ink"
         }`}
       >
         {isOnline ? (
-          <Wifi aria-hidden="true" className="h-3.5 w-3.5 text-[#059669]" />
+          <Wifi aria-hidden="true" className="h-3.5 w-3.5 text-success-ink" />
         ) : (
-          <CloudOff aria-hidden="true" className="h-3.5 w-3.5 text-[#D97706]" />
+          <CloudOff aria-hidden="true" className="h-3.5 w-3.5 text-warn-ink" />
         )}
         <span>{isOnline ? t("status.online") : t("status.offline")}</span>
       </span>
@@ -82,7 +82,7 @@ export function OfflineIndicator() {
       {pendingCount > 0 && (
         <Link
           href="/dashboard/sync"
-          className="inline-flex items-center gap-1 rounded-full border border-[#0284C7]/40 bg-[#E0F2FE] px-2.5 py-1 text-xs font-semibold text-[#075985] hover:bg-[#BAE6FD]"
+          className="inline-flex items-center gap-1 rounded-full border border-info/40 bg-info-soft px-2.5 py-1 text-xs font-semibold text-info-ink hover:bg-info-soft"
         >
           <span>{t("status.pending")}:</span>
           <span>{pendingCount}</span>
@@ -92,9 +92,9 @@ export function OfflineIndicator() {
       {openConflictCount > 0 && (
         <Link
           href="/dashboard/sync"
-          className="inline-flex items-center gap-1 rounded-full border border-[#DC2626]/45 bg-[#FEE2E2] px-2.5 py-1 text-xs font-semibold text-[#991B1B] hover:bg-[#FECACA]"
+          className="inline-flex items-center gap-1 rounded-full border border-danger/45 bg-danger-soft px-2.5 py-1 text-xs font-semibold text-danger-ink hover:bg-danger-soft"
         >
-          <AlertTriangle aria-hidden="true" className="h-3.5 w-3.5 text-[#DC2626]" />
+          <AlertTriangle aria-hidden="true" className="h-3.5 w-3.5 text-danger-ink" />
           <span>
             {t("status.conflicts")}: {openConflictCount}
           </span>

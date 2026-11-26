@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any, Literal, cast
@@ -255,7 +256,7 @@ async def _run_cpsat_for_clinic(
         forced_drug_code=forced_drug_code,
         language="en",
     )
-    return solve_aware_regimen(spec).to_cpsat_verdict()
+    return (await asyncio.to_thread(solve_aware_regimen, spec)).to_cpsat_verdict()
 
 
 async def _find_recent_patient_dispense_context(

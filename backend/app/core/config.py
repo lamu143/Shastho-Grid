@@ -84,10 +84,23 @@ class Settings(BaseSettings):
 
     RATE_LIMIT_REQUESTS: int = 120
     RATE_LIMIT_WINDOW_SECONDS: int = 60
+    # Stricter per-IP bucket for unauthenticated, guessable endpoints (login/PIN, feed keys).
+    RATE_LIMIT_SENSITIVE_REQUESTS: int = 30
+    # Reverse proxies whose X-Forwarded-For we believe. Empty = never trust the header.
+    TRUSTED_PROXIES: Annotated[list[str], NoDecode] = []
+    # When Redis is unavailable, sensitive credential/feed endpoints can fail closed if enabled.
+    RATE_LIMIT_FAIL_CLOSED_ON_SENSITIVE: bool = False
+    # Production readiness gate: reject/flag demo-only capacity data in live production environments.
+    ALLOW_DEMO_DATA_IN_PRODUCTION: bool = False
+    # Optional outbound automation webhook (e.g. Zapier Catch Hook) for de-identified alerts.
+    ALERT_WEBHOOK_URL: str | None = None
     IDEMPOTENCY_TTL_HOURS: int = 24
 
     GROQ_API_KEY: str | None = None
     GEMINI_API_KEY: str | None = None
+    # Optional extra Gemini keys (comma-separated). Quota-heavy features (Sathi voice) rotate
+    # across GEMINI_API_KEY + these when one returns 429.
+    GEMINI_API_KEYS: Annotated[list[str], NoDecode] = []
 
     # Routing (CareMatch ETAs). OSRM is optional; a Haversine x road-factor estimate is the fallback.
     OSRM_ENABLED: bool = False
@@ -127,6 +140,33 @@ class Settings(BaseSettings):
             return [item.strip() for item in raw.split(",") if item.strip()]
         raise ValueError("Invalid CORS_ORIGINS configuration")
 
+    @field_validator("GEMINI_API_KEYS", mode="before")
+    @classmethod
+    def _parse_gemini_keys(cls, value: Any) -> list[str]:
+        if isinstance(value, list):
+            return [str(v).strip() for v in value if str(v).strip()]
+        if isinstance(value, str):
+            return [v.strip() for v in value.split(",") if v.strip()]
+        return []
+
+    @property
+    def gemini_key_pool(self) -> list[str]:
+        """GEMINI_API_KEY first, then GEMINI_API_KEYS, de-duplicated."""
+        pool: list[str] = []
+        for k in [self.GEMINI_API_KEY, *self.GEMINI_API_KEYS]:
+            if k and k not in pool:
+                pool.append(k)
+        return pool
+
+    @field_validator("TRUSTED_PROXIES", mode="before")
+    @classmethod
+    def _parse_trusted_proxies(cls, value: Any) -> list[str]:
+        if isinstance(value, list):
+            return [str(v).strip() for v in value if str(v).strip()]
+        if isinstance(value, str):
+            return [v.strip() for v in value.split(",") if v.strip()]
+        return []
+
     @field_validator(
         "UPSTASH_REDIS_REST_URL",
         "UPSTASH_REDIS_REST_TOKEN",
@@ -148,7 +188,9 @@ class Settings(BaseSettings):
         secret = self.JWT_SECRET_KEY.strip()
         if not secret:
             raise ValueError("JWT_SECRET_KEY must not be blank.")
-        if self.ENVIRONMENT.strip().lower() in {"production", "prod"}:
+        # Fail closed: only an explicitly local environment may use the public dev secret,
+        # so a deploy that forgets ENVIRONMENT=production still refuses forgeable tokens.
+        if self.ENVIRONMENT.strip().lower() not in {"development", "dev", "local", "test"}:
             if secret == _DEV_JWT_SECRET_PLACEHOLDER or len(secret) < 32:
                 raise ValueError(
                     "JWT_SECRET_KEY must be a strong (>=32 char) non-default secret in production."

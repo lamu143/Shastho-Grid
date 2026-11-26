@@ -181,8 +181,8 @@ def deterministic_extract(note: str) -> Extraction:
         consciousness=consciousness,
         temperature_c=temp if temp is not None and 25 <= temp <= 45 else None,
         specialty=specialty,
-        needs_vent=_has(t, r"ventilat", r"intubat", r"\bcpap\b", r"ভেন্টিলেটর"),
-        needs_icu=True if _has(t, r"\bicu\b", r"আইসিইউ") else None,
+        needs_vent=_has(s, r"ventilat", r"intubat", r"\bcpap\b", r"ভেন্টিলেটর"),
+        needs_icu=True if _has(s, r"\bicu\b", r"আইসিইউ") else None,
         blood_type=blood_type,
         blood_units=int(units) if units is not None and blood_type else (2 if blood_type else 0),
         public_only=not _has(t, r"private\s*(?:ok|fine|allowed)", r"প্রাইভেট\s*(?:চলবে|হলেও)"),
@@ -215,7 +215,10 @@ def guard_against_invented_numbers(
     rejected: list[str] = []
     for name in ("respiration_rate", "spo2", "systolic_bp", "pulse", "blood_units", "max_eta_minutes"):
         value = data.get(name)
-        if value and float(value) not in present:
+        if value is None or value == getattr(fallback, name):
+            continue  # nothing claimed, or the deterministic parser read the same number
+        # Includes 0: a model-supplied pulse 0 would add 3 NEWS2 points, so it must be in the note.
+        if float(value) not in present:
             data[name] = getattr(fallback, name)
             rejected.append(name)
     temp = data.get("temperature_c")
@@ -224,6 +227,20 @@ def guard_against_invented_numbers(
         if not any(abs(temp - n) < 0.05 or abs(fahrenheit - n) <= 1 for n in present):
             data["temperature_c"] = fallback.temperature_c
             rejected.append("temperature_c")
+
+    # Categorical fields: a model may fill what the parser could not read, but never
+    # contradict a value the parser found in the note itself.
+    for name in ("consciousness", "specialty", "blood_type"):
+        parsed = getattr(fallback, name)
+        if parsed is not None and data.get(name) != parsed:
+            data[name] = parsed
+            rejected.append(name)
+    # Safety flags may only become *more* careful than the parser's reading.
+    for name, careful in (("needs_vent", True), ("needs_icu", True), ("on_oxygen", True), ("public_only", True)):
+        parsed = getattr(fallback, name)
+        if parsed == careful and data.get(name) != careful:
+            data[name] = parsed
+            rejected.append(name)
     return Extraction(**data), rejected
 
 

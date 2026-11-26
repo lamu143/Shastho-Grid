@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import date
 from typing import Annotated, Literal, cast
 
@@ -190,7 +191,7 @@ async def optimize_regimen(
         reference_date=date.today(),
         language=payload.language,
     )
-    result = solve_aware_regimen(solver_spec)
+    result = await asyncio.to_thread(solve_aware_regimen, solver_spec)
 
     try:
         counseling = await generate_counseling(

@@ -24,10 +24,10 @@ export function AuthGuard({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold text-[#172A33] sm:text-3xl">
+        <h1 className="text-2xl font-bold text-ink sm:text-3xl">
           {pageTitle}
         </h1>
-        <div className="mac-card p-6 text-sm text-[#536975]">
+        <div className="mac-card p-6 text-sm text-ink-2">
           {t("common.loading")}
         </div>
       </div>
@@ -37,7 +37,7 @@ export function AuthGuard({
   if (!user) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-[#172A33] sm:text-3xl">
+        <h1 className="text-2xl font-bold text-ink sm:text-3xl">
           {pageTitle}
         </h1>
         <section
@@ -45,20 +45,20 @@ export function AuthGuard({
           className="mac-card p-6"
         >
           <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0F766E]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-ink">
               <Lock aria-hidden="true" className="h-5 w-5" />
             </span>
             <div className="min-w-0 space-y-2">
-              <h2 className="text-lg font-bold text-[#172A33]">
+              <h2 className="text-lg font-bold text-ink">
                 {t("common.signInRequiredTitle")}
               </h2>
-              <p className="text-sm text-[#536975]">
+              <p className="text-sm text-ink-2">
                 {t("common.signInRequiredBody")}
               </p>
               <div className="pt-2">
                 <Link
                   href="/login"
-                  className="inline-flex items-center rounded-lg bg-[#0F766E] px-4 py-2 text-sm font-semibold text-white hover:bg-[#115E59]"
+                  className="inline-flex items-center rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-strong"
                 >
                   {t("common.goToLogin")}
                 </Link>
@@ -73,12 +73,12 @@ export function AuthGuard({
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-[#172A33] sm:text-3xl">
+        <h1 className="text-2xl font-bold text-ink sm:text-3xl">
           {pageTitle}
         </h1>
         <section
           role="alert"
-          className="rounded-xl border border-[#DC2626]/40 bg-[#FEE2E2] p-6 text-[#991B1B]"
+          className="rounded-xl border border-danger/40 bg-danger-soft p-6 text-danger-ink"
         >
           <div className="flex items-start gap-3">
             <ShieldAlert aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
