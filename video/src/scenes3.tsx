@@ -110,15 +110,15 @@ export const Architecture: React.FC = () => {
   };
   return (
     <SceneFrame hue="blue" cues={[
-      { from: 10, to: 190, text: "Under the hood: an offline-first Next.js PWA, a FastAPI backend, CP-SAT solvers, PostgreSQL and Redis." },
+      { from: 10, to: 190, text: "Under the hood: an offline-first Next.js PWA on Vercel, a FastAPI backend on Railway, CP-SAT solvers, PostgreSQL and Redis." },
       { from: 190, to: 390, text: "AI is guarded: de-identified input, injection screening, and a deterministic fallback when AI is unavailable." },
     ]}>
       <AbsoluteFill style={{ padding: "64px 140px", gap: 30 }}>
         <TitleBlock kicker="Architecture & trust" title="Built to be trusted" align="left" size={72} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr 1fr", gap: 30, alignItems: "center" }}>
-          {box("Next.js 16 PWA", "Offline-first · Dexie · EN/বাংলা", C.sky, 20)}
+          {box("Next.js 16 PWA", "Offline-first · EN/বাংলা · Vercel", C.sky, 20)}
           <div style={{ display: "grid", gap: 16 }}>
-            {box("FastAPI · Python 3.12", "JWT + RBAC · rate limits · audit", C.mint, 40)}
+            {box("FastAPI · Python 3.12", "JWT + RBAC · rate limits · audit · Railway", C.mint, 40)}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
               {box("CP-SAT", "RxSolve · CareMatch", C.green, 60)}
               {box("LockStep", "Row locks · idempotency", C.lilac, 72)}
@@ -132,7 +132,7 @@ export const Architecture: React.FC = () => {
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 26, opacity: interpolate(f, [150, 170], [0, 1], clamp) }}>
-          {stat("171", "backend tests passing", 160, C.green)}
+          {stat("174", "backend tests passing", 160, C.green)}
           {stat("25 → 1", "bookings → one winner", 172, C.lilac)}
           {stat("46 ms", "CP-SAT solve, real case", 184, C.sky)}
           {stat("2", "languages · 4 themes", 196, C.peach)}
@@ -147,7 +147,8 @@ export const Close: React.FC = () => {
   const f = useCurrentFrame();
   return (
     <SceneFrame cues={[
-      { from: 20, to: 240, text: "ShasthoGrid — provably safe care, from the pharmacy counter to the ICU bed." },
+      { from: 20, to: 140, text: "ShasthoGrid — provably safe care, from the pharmacy counter to the ICU bed." },
+      { from: 140, to: 270, text: "Try it live at shasthogrid.vercel.app — sign in with a demo account, no setup needed." },
     ]}>
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", gap: 34 }}>
         <div style={{ position: "absolute", top: 250, opacity: 0.6 }}><EcgLine start={0} dur={70} /></div>
@@ -157,8 +158,11 @@ export const Close: React.FC = () => {
             <span key={n} style={{ padding: "10px 20px", borderRadius: 999, border: `2px solid ${C.mint}55`, color: C.mint, fontSize: 26, fontWeight: 800 }}>{n}</span>
           ))}
         </div>
+        <div style={{ opacity: interpolate(f, [95, 120], [0, 1], clamp), translate: `0 ${interpolate(f, [95, 120], [16, 0], clamp)}px`, display: "flex", alignItems: "center", gap: 16, padding: "16px 30px", borderRadius: 999, background: C.mint, color: "#04211f", fontSize: 38, fontWeight: 900, boxShadow: `0 0 50px ${C.mint}66` }}>
+          <span>▶</span> Try it live · shasthogrid.vercel.app
+        </div>
         <div style={{ position: "absolute", right: 150, top: 70 }}>
-          <Sathi size={130} enter={30} say="Thank you! ধন্যবাদ!" sayFrom={60} sayTo={230} bubbleSide="left" />
+          <Sathi size={130} enter={30} say="Thank you! ধন্যবাদ!" sayFrom={60} sayTo={260} bubbleSide="left" />
         </div>
       </AbsoluteFill>
     </SceneFrame>

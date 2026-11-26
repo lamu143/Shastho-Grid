@@ -203,7 +203,7 @@ const EdgeCard: React.FC<{ e: (typeof EDGES)[number]; delay: number }> = ({ e, d
 };
 
 export const SathiCorner: React.FC<{ say: string; from: number; to: number }> = ({ say, from, to }) => (
-  <div style={{ position: "absolute", right: 90, top: 50 }}>
+  <div style={{ position: "absolute", right: 90, top: 88 }}>
     <Sathi size={120} enter={from - 10} say={say} sayFrom={from} sayTo={to} bubbleSide="left" />
   </div>
 );
