@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import {
   Activity,
   ArrowRight,
@@ -20,6 +20,8 @@ import { useI18n, type Locale } from "@/lib/i18n";
 import { BRAND, FEATURES } from "@/lib/brand";
 import { EUROPE_PMC_REFERENCES } from "@/lib/clinicalEvidence";
 import { CareNetworkIllustration } from "@/components/brand/CareNetworkIllustration";
+import { NumberTicker } from "@/components/fx/NumberTicker";
+import { trackSpotlight } from "@/components/fx/spotlight";
 
 type Copy = Record<Locale, string>;
 const c = (en: string, bn: string): Copy => ({ en, bn });
@@ -138,6 +140,23 @@ const FEATURE_ROUTES: Record<string, string> = {
   copilot: "/copilot",
 };
 
+/** "Built on" strip — every item is something the codebase actually uses or tests. */
+const BUILT_ON: Copy[] = [
+  c("WHO AWaRe classification", "WHO AWaRe শ্রেণিবিভাগ"),
+  c("NEWS2 early-warning score", "NEWS2 আর্লি-ওয়ার্নিং স্কোর"),
+  c("Google OR-Tools CP-SAT", "Google OR-Tools CP-SAT"),
+  c("Minimal conflict sets (MUS)", "ন্যূনতম সংঘর্ষ সেট (MUS)"),
+  c("PostgreSQL row locks", "PostgreSQL রো লক"),
+  c("Idempotency keys", "আইডেমপোটেন্সি কি"),
+  c("Offline-first PWA", "অফলাইন-ফার্স্ট PWA"),
+  c("Bangla + English", "বাংলা + ইংরেজি"),
+  c("De-identified, guarded AI", "পরিচয়-গোপন, সুরক্ষিত AI"),
+  c("Automated accessibility checks", "স্বয়ংক্রিয় অ্যাক্সেসিবিলিটি পরীক্ষা"),
+];
+
+/** Bento: these three span two columns on wide screens (rows of 3 fill with no gaps). */
+const WIDE_FEATURES = new Set(["carematch", "lockstep", "copilot"]);
+
 const fadeUp = {
   hidden: { opacity: 0, y: 10 },
   show: { opacity: 1, y: 0, transition: { duration: 0.22, ease: "easeOut" } },
@@ -169,6 +188,15 @@ export default function HomePage() {
   const [proofWinner, setProofWinner] = useState<number>(7);
   const [proofRunId, setProofRunId] = useState<number>(0);
 
+  // Scroll-linked hero: as the page scrolls, the care-network illustration recedes a little
+  // (drifts down, shrinks, dims) — depth without hijacking scroll. Off under reduced motion.
+  const heroRef = useRef<HTMLElement>(null);
+  const reduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const artY = useTransform(scrollYProgress, [0, 1], [0, 90]);
+  const artScale = useTransform(scrollYProgress, [0, 1], [1, 0.92]);
+  const artOpacity = useTransform(scrollYProgress, [0, 0.9], [1, 0.45]);
+
   const replayProofRace = () => {
     const next = Math.floor(Math.random() * 25);
     setProofWinner(next);
@@ -178,7 +206,13 @@ export default function HomePage() {
   return (
     <div className="space-y-16 pb-8 sm:space-y-24">
       {/* HERO */}
-      <section className="relative overflow-hidden rounded-3xl border border-brand/40 bg-gradient-to-br from-surface via-brand-soft to-info-soft p-6 sm:p-10 lg:p-12">
+      <section
+        ref={heroRef}
+        onPointerMove={trackSpotlight}
+        className="relative overflow-hidden rounded-3xl border border-brand/40 bg-gradient-to-br from-surface via-brand-soft to-info-soft p-6 sm:p-10 lg:p-12"
+      >
+        <div aria-hidden="true" className="sg-dotgrid" />
+        <div aria-hidden="true" className="sg-dotgrid-lit" />
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#2DD4BF]/20 blur-3xl"
@@ -228,7 +262,9 @@ export default function HomePage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
           >
-            <CareNetworkIllustration className="h-auto w-full drop-shadow-2xl" />
+            <motion.div style={reduceMotion ? undefined : { y: artY, scale: artScale, opacity: artOpacity }}>
+              <CareNetworkIllustration className="h-auto w-full drop-shadow-2xl" />
+            </motion.div>
           </motion.div>
         </div>
 
@@ -288,6 +324,28 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* BUILT ON — marquee (pauses on hover; static wrap under reduced motion) */}
+      <section aria-label={L(c("Built on", "যার উপর তৈরি"))} className="-mt-6 sm:-mt-12">
+        <div className="sg-marquee py-1">
+          <ul className="sg-marquee-track">
+            {[0, 1].map((copy) => (
+              <React.Fragment key={copy}>
+                {BUILT_ON.map((item, i) => (
+                  <li
+                    key={`${copy}-${i}`}
+                    aria-hidden={copy === 1 ? true : undefined}
+                    className={`mx-1.5 my-1 inline-flex shrink-0 items-center gap-2 rounded-full border border-line bg-surface/70 px-4 py-2 text-sm font-semibold whitespace-nowrap text-ink-2 backdrop-blur-sm ${copy === 1 ? "sg-marquee-dup" : ""}`}
+                  >
+                    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-brand" />
+                    {L(item)}
+                  </li>
+                ))}
+              </React.Fragment>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       {/* EVIDENCE */}
       <section aria-labelledby="evidence-title" className="space-y-6">
         <h2 id="evidence-title" className="text-xl font-bold text-ink sm:text-2xl">
@@ -304,9 +362,12 @@ export default function HomePage() {
             <motion.li
               key={e.value}
               variants={fadeUp}
-              className="mac-card p-5"
+              onPointerMove={trackSpotlight}
+              className="sg-spotlight mac-card p-5"
             >
-              <p className="text-3xl font-extrabold tracking-tight text-brand-ink tabular-nums">{e.value}</p>
+              <p className="text-3xl font-extrabold tracking-tight text-brand-ink tabular-nums">
+                <NumberTicker value={e.value} />
+              </p>
               <p className="mt-2 text-sm leading-relaxed text-ink-2">{L(e.label)}</p>
               <p className="mt-3 text-xs font-semibold tracking-wide text-ink-3 uppercase">{e.source}</p>
               <p className="mt-0.5 text-xs text-ink-3">{L(e.detail)}</p>
@@ -353,7 +414,9 @@ export default function HomePage() {
                 whileInView="show"
                 viewport={{ once: true, amount: 0.3 }}
                 variants={fadeUp}
-                className="group relative overflow-hidden mac-card p-6 transition hover:-translate-y-0.5 hover:shadow-lg"
+                onPointerMove={trackSpotlight}
+                style={{ "--sg-spot": p.tone === "success" ? "var(--sg-success)" : "var(--sg-info)" } as React.CSSProperties}
+                className="group sg-spotlight relative overflow-hidden mac-card p-6 transition hover:-translate-y-0.5 hover:shadow-lg"
               >
                 <span
                   className={`flex h-12 w-12 items-center justify-center rounded-xl ${
@@ -401,11 +464,14 @@ export default function HomePage() {
         >
           {FEATURES.map((f) => {
             const href = FEATURE_ROUTES[f.id] ?? "/dashboard";
+            const wide = WIDE_FEATURES.has(f.id);
             return (
-              <motion.li key={f.id} variants={fadeUp}>
+              <motion.li key={f.id} variants={fadeUp} className={wide ? "lg:col-span-2" : undefined}>
                 <Link
                   href={href}
-                  className="group relative flex h-full flex-col mac-card p-5 transition duration-150 hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-lg active:scale-[0.99]"
+                  onPointerMove={trackSpotlight}
+                  style={{ "--sg-spot": f.accent } as React.CSSProperties}
+                  className={`group sg-spotlight relative flex h-full flex-col mac-card transition duration-150 hover:-translate-y-0.5 hover:border-brand/35 hover:shadow-lg active:scale-[0.99] ${wide ? "p-6 lg:p-7" : "p-5"}`}
                 >
                   <span
                     aria-hidden="true"
@@ -413,14 +479,14 @@ export default function HomePage() {
                     style={{ backgroundColor: f.accent }}
                   />
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-base font-bold text-ink transition-colors group-hover:text-brand-ink">
+                    <h3 className={`font-bold text-ink transition-colors group-hover:text-brand-ink ${wide ? "text-lg lg:text-xl" : "text-base"}`}>
                       {f.name}
                     </h3>
                     <span className="rounded-md bg-fill px-2 py-0.5 text-xs font-bold text-ink-2">
                       {f.rubric}
                     </span>
                   </div>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-2">{L(f.summary)}</p>
+                  <p className={`mt-2 flex-1 leading-relaxed text-ink-2 ${wide ? "text-sm lg:max-w-xl lg:text-base" : "text-sm"}`}>{L(f.summary)}</p>
                   <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-brand-ink opacity-80 transition group-hover:opacity-100">
                     {L(c("Open", "খুলুন"))}
                     <ArrowRight aria-hidden="true" className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -447,7 +513,10 @@ export default function HomePage() {
         </div>
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           {/* ConflictProof Card */}
-          <div className="flex flex-col justify-between rounded-2xl border border-white/12 bg-white/[0.06] p-5 backdrop-blur">
+          <div
+            style={{ "--sg-beam-a": "#FCA5A5", "--sg-beam-b": "#67E8F9" } as React.CSSProperties}
+            className="sg-beam flex flex-col justify-between rounded-2xl border border-white/12 bg-white/[0.06] p-5 backdrop-blur"
+          >
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-sm font-semibold text-[#FCA5A5]">
@@ -504,7 +573,10 @@ export default function HomePage() {
           </div>
 
           {/* RaceLab Card */}
-          <div className="flex flex-col justify-between rounded-2xl border border-white/12 bg-white/[0.06] p-5 backdrop-blur">
+          <div
+            style={{ "--sg-beam-a": "#C4B5FD", "--sg-beam-b": "#6EE7B7" } as React.CSSProperties}
+            className="sg-beam sg-beam-slow flex flex-col justify-between rounded-2xl border border-white/12 bg-white/[0.06] p-5 backdrop-blur"
+          >
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-sm font-semibold text-[#C4B5FD]">
@@ -600,12 +672,20 @@ export default function HomePage() {
           <h2 className="text-xl font-bold text-ink sm:text-2xl">{L(COPY.closeTitle)}</h2>
           <p className="text-sm text-ink-2">{L(COPY.closeBody)}</p>
         </div>
-        <Link
-          href="/login"
-          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white shadow-sm transition duration-150 hover:-translate-y-0.5 hover:bg-brand-strong active:scale-[0.98]"
-        >
-          {L(COPY.ctaSecondary)} <ArrowRight aria-hidden="true" className="h-4 w-4" />
-        </Link>
+        <div className="flex shrink-0 flex-wrap gap-3">
+          <Link
+            href="/story"
+            className="inline-flex items-center gap-2 rounded-xl border border-brand/40 bg-surface px-5 py-3 text-sm font-semibold text-brand-ink shadow-sm transition duration-150 hover:-translate-y-0.5 hover:border-brand active:scale-[0.98]"
+          >
+            {L(c("Watch the Farmgate case", "ফার্মগেট কেসটি দেখুন"))}
+          </Link>
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white shadow-sm transition duration-150 hover:-translate-y-0.5 hover:bg-brand-strong active:scale-[0.98]"
+          >
+            {L(COPY.ctaSecondary)} <ArrowRight aria-hidden="true" className="h-4 w-4" />
+          </Link>
+        </div>
       </section>
 
       <p className="sr-only">{BRAND.description}</p>
