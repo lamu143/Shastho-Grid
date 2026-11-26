@@ -12,8 +12,10 @@ COPY pyproject.toml ./
 RUN uv pip install --system --no-cache -r pyproject.toml
 
 COPY app ./app
-RUN uv pip install --system --no-cache --no-deps .
+COPY data ./data
+COPY start.sh ./start.sh
+RUN uv pip install --system --no-cache --no-deps . && chmod +x ./start.sh
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD ["./start.sh"]
