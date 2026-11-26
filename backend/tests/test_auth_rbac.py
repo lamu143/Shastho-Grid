@@ -710,7 +710,9 @@ async def test_idempotency_lock_released_on_rollback_allows_retry(
 
 
 @pytest.mark.asyncio
-async def test_healthz_standard_error_envelope_and_neon_url(client: AsyncClient) -> None:
+async def test_healthz_standard_error_envelope_and_neon_url(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
     # Healthz against live PostgreSQL 16 + Redis 7
     health = await client.get("/healthz")
     assert health.status_code == 200
@@ -746,14 +748,19 @@ async def test_healthz_standard_error_envelope_and_neon_url(client: AsyncClient)
         if expected_ssl:
             assert expected_ssl in norm, norm
 
-    # Production JWT_SECRET_KEY startup guard
+    # Production JWT_SECRET_KEY startup guard. Build these Settings in isolation: no ambient
+    # JWT_SECRET_KEY (CI sets a strong one) and no backend/.env, so "production with no secret
+    # configured" really falls back to the public dev placeholder — which must be rejected.
+    monkeypatch.delenv("JWT_SECRET_KEY", raising=False)
+    monkeypatch.delenv("ENVIRONMENT", raising=False)
     with pytest.raises(ValueError):
-        Settings(ENVIRONMENT="production")
+        Settings(_env_file=None, ENVIRONMENT="production")
     with pytest.raises(ValueError):
-        Settings(ENVIRONMENT="prod", JWT_SECRET_KEY="too-short-secret")
+        Settings(_env_file=None, ENVIRONMENT="prod", JWT_SECRET_KEY="too-short-secret")
     with pytest.raises(ValueError):
-        Settings(ENVIRONMENT="development", JWT_SECRET_KEY="   ")
+        Settings(_env_file=None, ENVIRONMENT="development", JWT_SECRET_KEY="   ")
     prod_ok = Settings(
+        _env_file=None,
         ENVIRONMENT="production",
         JWT_SECRET_KEY="a-very-strong-production-secret-key-2026-valid",
     )
